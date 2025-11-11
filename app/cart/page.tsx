@@ -116,7 +116,7 @@ export default function CartPage() {
           {cart.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-xl text-gray-400 mb-6">
-                You haven't added any miniatures to your cart yet.
+                You haven&apos;t added any miniatures to your cart yet.
               </p>
               <Link
                 href="/figurefinder"

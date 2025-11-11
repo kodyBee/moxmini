@@ -115,11 +115,6 @@ export default function FigureFinderPage() {
         // Extract unique values for materials
         setMaterials([...new Set(miniaturesOnly.map((p: Product) => p.material).filter(Boolean))] as string[]);
         
-        // Categorize tags into different filter types
-        const allTags = miniaturesOnly.flatMap((p: Product) => p.tags || []);
-        // Keeping uniqueTags for potential future use
-        // const uniqueTags = [...new Set(allTags)] as string[];
-        
         // filter categories 
         const materialOptions = ["metal", "plastic"];
         const genreOptions = ["fantasy", "modern", "sci-fi", "western", "superhero"];
