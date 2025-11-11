@@ -1,32 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { Navigation } from "@/components/ui/navigation";
-import { Separator } from "@/components/ui/separator";
-import { FeaturedProduct } from "@/lib/types/product";
-
-const featuredProducts: FeaturedProduct[] = [
-  {
-    id: 1,
-    name: "Dragon Miniature",
-    category: "Monsters",
-    price: 89.99,
-    image: "https://via.placeholder.com/400x400",
-  },
-  {
-    id: 2,
-    name: "Human Fighter",
-    category: "Hand Painted",
-    price: 45.99,
-    image: "https://via.placeholder.com/400x400",
-  },
-  {
-    id: 3,
-    name: "Dungeon Set",
-    category: "Terrain",
-    price: 129.99,
-    image: "https://via.placeholder.com/400x400",
-  },
-];
 
 export default function Home() {
   return (

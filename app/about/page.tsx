@@ -153,7 +153,7 @@ function About() {
                   color: "#aaaaaa",
                 }}
               >
-                "Bringing imagination to the tabletop, one miniature at a time."
+                &ldquo;Bringing imagination to the tabletop, one miniature at a time.&rdquo;
               </p>
             </div>
           </div>

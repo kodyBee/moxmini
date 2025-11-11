@@ -117,7 +117,8 @@ export default function FigureFinderPage() {
         
         // Categorize tags into different filter types
         const allTags = miniaturesOnly.flatMap((p: Product) => p.tags || []);
-        const uniqueTags = [...new Set(allTags)] as string[];
+        // Keeping uniqueTags for potential future use
+        // const uniqueTags = [...new Set(allTags)] as string[];
         
         // filter categories 
         const materialOptions = ["metal", "plastic"];
@@ -178,7 +179,7 @@ export default function FigureFinderPage() {
 
   // Sort and paginate products
   useEffect(() => {
-    let sorted = [...filteredProducts];
+    const sorted = [...filteredProducts];
 
     if (sortBy === "a-z") {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -633,7 +634,7 @@ export default function FigureFinderPage() {
                   const pages = [];
                   const maxVisible = 5;
                   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-                  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                  const endPage = Math.min(totalPages, startPage + maxVisible - 1);
 
                   if (endPage - startPage < maxVisible - 1) {
                     startPage = Math.max(1, endPage - maxVisible + 1);
@@ -751,6 +752,7 @@ export default function FigureFinderPage() {
                 className="relative w-full max-h-[70vh] bg-black/50 rounded-lg overflow-auto flex items-center justify-center touch-auto"
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selectedImage}
                   alt={selectedProductName || "Product image"}

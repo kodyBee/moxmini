@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Navigation } from "@/components/ui/navigation";
@@ -9,14 +9,12 @@ import { Separator } from "@/components/ui/separator";
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Clear the cart after successful payment
     if (sessionId) {
       localStorage.removeItem("cart");
       window.dispatchEvent(new Event("cartUpdated"));
-      setLoading(false);
     }
   }, [sessionId]);
 

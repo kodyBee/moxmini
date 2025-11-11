@@ -7,7 +7,7 @@ export interface Product {
   images?: Array<{ URL?: string }>;
   price?: string;
   description?: string;
-  [key: string]: any;
+  [key: string]: string | string[] | Array<{ URL?: string }> | undefined;
 }
 
 export interface FeaturedProduct {

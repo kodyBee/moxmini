@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
 import { CartItem } from "@/lib/types/cart";
-import { getStripe } from "@/lib/stripe";
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -77,9 +76,10 @@ export default function CartPage() {
       } else {
         throw new Error("No checkout URL returned");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Checkout error:", error);
-      alert(error.message || "Failed to proceed to checkout. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to proceed to checkout. Please try again.";
+      alert(errorMessage);
       setIsProcessing(false);
     }
   };

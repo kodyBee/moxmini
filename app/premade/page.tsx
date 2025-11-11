@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/ui/navigation";
 import {
   Carousel,
@@ -13,7 +12,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export default function Page() {
-  const router = useRouter();
   const [addedToCart, setAddedToCart] = useState<number | null>(null);
   const products = [
     {
@@ -184,6 +182,7 @@ export default function Page() {
                         overflow: "hidden",
                       }}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={product.image}
                         alt={product.name}

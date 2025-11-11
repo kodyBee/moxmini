@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
+interface PaintingOptions {
+  hairColor?: string;
+  skinColor?: string;
+  accessoryColor?: string;
+  fabricColor?: string;
+  specificDetails?: string;
+}
+
+interface CartItemProduct {
+  name: string;
+  sku: string;
+  price: string;
+  images?: { URL: string }[];
+}
+
+interface CartItemInput {
+  product: CartItemProduct;
+  paintingOptions: PaintingOptions;
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-10-29.clover",
 });
@@ -17,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create line items for Stripe
-    const lineItems = cartItems.map((item: any) => {
+    const lineItems = cartItems.map((item: CartItemInput) => {
       const price = parseFloat(item.product.price || "0");
       const priceInCents = Math.round(price * 100);
 
@@ -66,10 +86,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Stripe checkout error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to create checkout session";
     return NextResponse.json(
-      { error: error.message || "Failed to create checkout session" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
