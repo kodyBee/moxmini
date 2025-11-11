@@ -72,13 +72,13 @@ function CheckoutSuccessContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/figurefinder"
-              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors"
+              className="cursor-pointer px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors"
             >
               Continue Shopping
             </Link>
             <Link
               href="/"
-              className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors border border-white/20"
+              className="cursor-pointer px-8 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors border border-white/20"
             >
               Return Home
             </Link>

@@ -298,10 +298,10 @@ export default function FigureFinderPage() {
                     setCurrentPage(1);
                     updateURL({ sort, page: 1 });
                   }}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  className={`cursor-pointer px-3 py-1 rounded text-sm font-medium transition-all duration-200 ${
                     sortBy === sort
-                      ? "bg-blue-500 text-white"
-                      : "bg-black/40 text-gray-300 hover:bg-black/60"
+                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/50"
+                      : "bg-black/40 text-gray-300 hover:bg-blue-500/20 hover:text-white hover:scale-105 hover:shadow-md active:scale-95"
                   }`}
                 >
                   {sort}
@@ -458,7 +458,7 @@ export default function FigureFinderPage() {
             <div className="flex gap-4">
               <button
                 onClick={resetFilters}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                className="cursor-pointer px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors"
               >
                 Reset Filters
               </button>
@@ -476,6 +476,7 @@ export default function FigureFinderPage() {
                 {displayedProducts.map((product) => (
                 <div
                   key={product.sku}
+                  onClick={() => router.push(`/painting-options/${product.sku}`)}
                   style={{
                     background: "rgba(255, 255, 255, 0.05)",
                     borderRadius: "12px",
@@ -531,7 +532,7 @@ export default function FigureFinderPage() {
                               setSelectedProductName(product.name);
                             }
                           }}
-                          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm z-10"
+                          className="cursor-pointer absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-all duration-200 backdrop-blur-sm z-10"
                           title="View full size"
                         >
                           <svg
@@ -573,6 +574,7 @@ export default function FigureFinderPage() {
 
                   <Link
                     href={`/painting-options/${product.sku}`}
+                    onClick={(e) => e.stopPropagation()}
                     style={{
                       display: "block",
                       width: "100%",
@@ -616,7 +618,7 @@ export default function FigureFinderPage() {
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded font-medium transition-colors ${
+                  className={`cursor-pointer px-4 py-2 rounded font-medium transition-colors ${
                     currentPage === 1
                       ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
@@ -641,7 +643,7 @@ export default function FigureFinderPage() {
                       <button
                         key={1}
                         onClick={() => goToPage(1)}
-                        className="px-3 py-2 rounded bg-black/40 hover:bg-black/60 text-white transition-colors"
+                        className="cursor-pointer px-3 py-2 rounded bg-black/40 hover:bg-black/60 text-white transition-colors"
                       >
                         1
                       </button>
@@ -656,7 +658,7 @@ export default function FigureFinderPage() {
                       <button
                         key={i}
                         onClick={() => goToPage(i)}
-                        className={`px-3 py-2 rounded font-medium transition-colors ${
+                        className={`cursor-pointer px-3 py-2 rounded font-medium transition-colors ${
                           currentPage === i
                             ? "bg-blue-500 text-white"
                             : "bg-black/40 hover:bg-black/60 text-white"
@@ -675,7 +677,7 @@ export default function FigureFinderPage() {
                       <button
                         key={totalPages}
                         onClick={() => goToPage(totalPages)}
-                        className="px-3 py-2 rounded bg-black/40 hover:bg-black/60 text-white transition-colors"
+                        className="cursor-pointer px-3 py-2 rounded bg-black/40 hover:bg-black/60 text-white transition-colors"
                       >
                         {totalPages}
                       </button>
@@ -688,7 +690,7 @@ export default function FigureFinderPage() {
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded font-medium transition-colors ${
+                  className={`cursor-pointer px-4 py-2 rounded font-medium transition-colors ${
                     currentPage === totalPages
                       ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                       : "bg-blue-500 hover:bg-blue-600 text-white"
@@ -711,14 +713,14 @@ export default function FigureFinderPage() {
         {/* Image Modal to correct the loading issues from the api */}
         {selectedImage && (
           <div
-            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 touch-none"
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 touch-none cursor-pointer"
             onClick={() => setSelectedImage(null)}
           >
             <div className="relative max-w-4xl w-full flex flex-col items-center">
               {/* Close button - larger for mobile */}
               <button
                 onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 sm:-top-14 right-0 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white p-3 sm:p-2 rounded-full transition-all duration-200 backdrop-blur-sm z-10 touch-manipulation"
+                className="cursor-pointer absolute -top-12 sm:-top-14 right-0 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white p-3 sm:p-2 rounded-full transition-all duration-200 backdrop-blur-sm z-10 touch-manipulation"
                 title="Close"
                 aria-label="Close image"
               >

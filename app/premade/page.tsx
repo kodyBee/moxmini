@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import {
   Carousel,
@@ -11,49 +11,37 @@ import {
 } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 
+interface PremadeProduct {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  image: string;
+  description: string;
+  sku: string;
+}
+
 export default function Page() {
   const [addedToCart, setAddedToCart] = useState<number | null>(null);
-  const products = [
-    {
-      id: 1,
-      name: "Human Fighter",
-      price: 30,
-      originalPrice: 50,
-      image: "/fighterfront.jpeg",
-      description: "High-quality product with amazing features",
-      sku: "PREMADE-001",
-    },
-    {
-      id: 2,
-      name: "Premium Product 2",
-      price: 79.99,
-      originalPrice: 120,
-      image: "https://via.placeholder.com/300x300",
-      description: "Best seller with excellent reviews",
-      sku: "PREMADE-002",
-    },
-    {
-      id: 3,
-      name: "Premium Product 3",
-      price: 130,
-      originalPrice: 200,
-      image: "https://via.placeholder.com/300x300",
-      description: "Limited edition exclusive item",
-      sku: "PREMADE-003",
-    },
-    {
-      id: 4,
-      name: "Premium Product 4",
-      price: 59.99,
-      originalPrice: 89.99,
-      image: "https://via.placeholder.com/300x300",
-      description: "Great value for money",
-      sku: "PREMADE-004",
-    },
-  ];
+  const [products, setProducts] = useState<PremadeProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addToCart = (product: typeof products[0]) => {
-    // Create cart item for premade product (no painting options needed)
+  useEffect(() => {
+    // Fetch products from API
+    fetch("/api/premade-products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching premade products:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  const addToCart = (product: PremadeProduct) => {
+    // Create cart item for premade product, make sure paint options dont display in cart later
     const cartItem = {
       product: {
         sku: product.sku,
@@ -61,6 +49,7 @@ export default function Page() {
         price: product.price.toString(),
         images: [{ URL: product.image }],
         material: "prepainted",
+        description: product.description,
       },
       paintingOptions: {
         hairColor: "",
@@ -133,12 +122,29 @@ export default function Page() {
           <Separator className="mt-3 sm:mt-8 bg-white/20" />
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center text-white text-xl py-20">
+            Loading products...
+          </div>
+        )}
+
+        {/* Error State */}
+        {!loading && products.length === 0 && (
+          <div className="text-center text-white text-xl py-20">
+            No products available at this time.
+          </div>
+        )}
+
         {/* Product Carousel */}
+        {!loading && products.length > 0 && (
         <div style={{ maxWidth: "1200px", width: "100%", padding: "0 15px" }}>
           <Carousel
             opts={{
               align: "start",
               loop: true,
+              skipSnaps: false,
+              dragFree: false,
             }}
             className="w-full"
           >
@@ -149,6 +155,7 @@ export default function Page() {
                   className="md:basis-1/2 lg:basis-1/3"
                 >
                   <div
+                    onClick={() => addToCart(product)}
                     style={{
                       background: "rgba(255, 255, 255, 0.05)",
                       borderRadius: "12px",
@@ -224,7 +231,10 @@ export default function Page() {
 
                     {/* Add to Cart Button */}
                     <button
-                      onClick={() => addToCart(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product);
+                      }}
                       className="w-full px-4 py-3 text-sm sm:text-base font-bold text-white border-none rounded-lg cursor-pointer transition-colors"
                       style={{
                         backgroundColor: addedToCart === product.id ? "#00ff00" : "#4488ff",
@@ -246,10 +256,11 @@ export default function Page() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="text-black border-black/20 hover:bg-black/10" />
-            <CarouselNext className="text-black border-black/20 hover:bg-black/10" />
+            <CarouselPrevious className="text-black border-black/20 hover:bg-black/10" tabIndex={-1} />
+            <CarouselNext className="text-black border-black/20 hover:bg-black/10" tabIndex={-1} />
           </Carousel>
         </div>
+        )}
       </main>
     </>
   );

@@ -57,7 +57,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-3 flex-shrink-0 transition-all duration-100 hover:scale-105 active:scale-95 active:opacity-80"
+          className="cursor-pointer flex items-center gap-3 flex-shrink-0 transition-all duration-100 hover:scale-105 active:scale-95 active:opacity-80"
         >
           <Image
             src="/moxlogosimple.png"
@@ -78,7 +78,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
             <Link
               key={item.page}
               href={item.href}
-              className={`relative px-4 py-2 text-base font-medium transition-all duration-200 rounded-lg group active:scale-95 active:bg-blue-500/10 ${
+              className={`cursor-pointer relative px-4 py-2 text-base font-medium transition-all duration-200 rounded-lg group active:scale-95 active:bg-blue-500/10 ${
                 currentPage === item.page
                   ? "text-blue-400"
                   : "text-gray-300 hover:text-white hover:bg-slate-800/50"
@@ -99,7 +99,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         {/* Cart Button */}
         <Link 
           href="/cart"
-          className="relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 active:from-blue-700 active:to-blue-600 text-white px-3 sm:px-5 py-2.5 rounded-lg font-semibold transition-all duration-100 flex items-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105"
+          className="cursor-pointer relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 active:from-blue-700 active:to-blue-600 text-white px-3 sm:px-5 py-2.5 rounded-lg font-semibold transition-all duration-100 flex items-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105"
         >
           <svg
             className="w-5 h-5"
@@ -124,7 +124,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
 
         {/* Mobile Menu Button */}
         <button 
-          className="md:hidden text-white p-2 ml-2 rounded-lg transition-all duration-200 active:scale-90 active:bg-slate-800 hover:bg-slate-800/50"
+          className="cursor-pointer md:hidden text-white p-2 ml-2 rounded-lg transition-all duration-200 active:scale-90 active:bg-slate-800 hover:bg-slate-800/50"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle mobile menu"
         >
@@ -162,7 +162,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
                 key={item.page}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg active:scale-95 active:bg-blue-500/30 ${
+                className={`cursor-pointer px-4 py-3 text-base font-medium transition-all duration-200 rounded-lg active:scale-95 active:bg-blue-500/30 ${
                   currentPage === item.page
                     ? "bg-blue-500/20 text-blue-400"
                     : "text-gray-300 hover:bg-slate-800 hover:text-white"

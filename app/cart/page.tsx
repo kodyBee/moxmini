@@ -11,6 +11,7 @@ export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -31,6 +32,40 @@ export default function CartPage() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     // Dispatch custom event to update cart count
     window.dispatchEvent(new Event("cartUpdated"));
+  };
+
+  const updateItemColor = (itemId: string, colorType: string, newColor: string) => {
+    const updatedCart = cart.map((item) => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          paintingOptions: {
+            ...item.paintingOptions,
+            [colorType]: newColor,
+          },
+        };
+      }
+      return item;
+    });
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
+  const updateItemDetails = (itemId: string, newDetails: string) => {
+    const updatedCart = cart.map((item) => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          paintingOptions: {
+            ...item.paintingOptions,
+            specificDetails: newDetails,
+          },
+        };
+      }
+      return item;
+    });
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
   const clearCart = () => {
@@ -120,7 +155,7 @@ export default function CartPage() {
               </p>
               <Link
                 href="/figurefinder"
-                className="inline-block px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors"
+                className="cursor-pointer inline-block px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors"
               >
                 Browse Miniatures
               </Link>
@@ -170,77 +205,142 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        {/* Painting Options */}
-                        <div className="bg-black/30 rounded-lg p-3 sm:p-4 mb-4">
-                          <h4 className="font-semibold mb-3 text-xs sm:text-sm text-gray-300">
-                            Painting Options:
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Hair:</span>
-                              <div
-                                className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
-                                style={{ backgroundColor: item.paintingOptions.hairColor }}
-                                title={item.paintingOptions.hairColor}
-                              />
-                              <span className="text-xs text-gray-500 truncate">
-                                {item.paintingOptions.hairColor}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Skin:</span>
-                              <div
-                                className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
-                                style={{ backgroundColor: item.paintingOptions.skinColor }}
-                                title={item.paintingOptions.skinColor}
-                              />
-                              <span className="text-xs text-gray-500 truncate">
-                                {item.paintingOptions.skinColor}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Accessory:</span>
-                              <div
-                                className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
-                                style={{ backgroundColor: item.paintingOptions.accessoryColor }}
-                                title={item.paintingOptions.accessoryColor}
-                              />
-                              <span className="text-xs text-gray-500 truncate">
-                                {item.paintingOptions.accessoryColor}
-                              </span>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Fabric:</span>
-                              <div
-                                className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
-                                style={{ backgroundColor: item.paintingOptions.fabricColor }}
-                                title={item.paintingOptions.fabricColor}
-                              />
-                              <span className="text-xs text-gray-500 truncate">
-                                {item.paintingOptions.fabricColor}
-                              </span>
-                            </div>
+                        {/* Painting Options or Description */}
+                        {item.product.material === "prepainted" ? (
+                          // Show description for prepainted/premade products
+                          <div className="bg-black/30 rounded-lg p-3 sm:p-4 mb-4">
+                            <h4 className="font-semibold text-xs sm:text-sm text-gray-300 mb-2">
+                              Product Description:
+                            </h4>
+                            <p className="text-xs sm:text-sm text-gray-300 break-words">
+                              {item.product.description || "Professionally prepainted miniature ready for your adventures."}
+                            </p>
                           </div>
-                          
-                          {item.paintingOptions.specificDetails && (
+                        ) : (
+                          // Show painting options for custom products
+                          <div className="bg-black/30 rounded-lg p-3 sm:p-4 mb-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-semibold text-xs sm:text-sm text-gray-300">
+                                Painting Options:
+                              </h4>
+                              <button
+                                onClick={() => setEditingItemId(editingItemId === item.id ? null : item.id)}
+                                className="cursor-pointer text-xs sm:text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                              >
+                                {editingItemId === item.id ? "Done Editing" : "Edit Colors"}
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Hair:</span>
+                                {editingItemId === item.id ? (
+                                  <input
+                                    type="color"
+                                    value={item.paintingOptions.hairColor}
+                                    onChange={(e) => updateItemColor(item.id, "hairColor", e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-2 border-white/30 flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
+                                    style={{ backgroundColor: item.paintingOptions.hairColor }}
+                                    title={item.paintingOptions.hairColor}
+                                  />
+                                )}
+                                <span className="text-xs text-gray-500 truncate">
+                                  {item.paintingOptions.hairColor}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Skin:</span>
+                                {editingItemId === item.id ? (
+                                  <input
+                                    type="color"
+                                    value={item.paintingOptions.skinColor}
+                                    onChange={(e) => updateItemColor(item.id, "skinColor", e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-2 border-white/30 flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
+                                    style={{ backgroundColor: item.paintingOptions.skinColor }}
+                                    title={item.paintingOptions.skinColor}
+                                  />
+                                )}
+                                <span className="text-xs text-gray-500 truncate">
+                                  {item.paintingOptions.skinColor}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Accessory:</span>
+                                {editingItemId === item.id ? (
+                                  <input
+                                    type="color"
+                                    value={item.paintingOptions.accessoryColor}
+                                    onChange={(e) => updateItemColor(item.id, "accessoryColor", e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-2 border-white/30 flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
+                                    style={{ backgroundColor: item.paintingOptions.accessoryColor }}
+                                    title={item.paintingOptions.accessoryColor}
+                                  />
+                                )}
+                                <span className="text-xs text-gray-500 truncate">
+                                  {item.paintingOptions.accessoryColor}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-xs sm:text-sm text-gray-400 flex-shrink-0">Fabric:</span>
+                                {editingItemId === item.id ? (
+                                  <input
+                                    type="color"
+                                    value={item.paintingOptions.fabricColor}
+                                    onChange={(e) => updateItemColor(item.id, "fabricColor", e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-2 border-white/30 flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-6 h-6 sm:w-8 sm:h-8 rounded border-2 border-white/30 flex-shrink-0"
+                                    style={{ backgroundColor: item.paintingOptions.fabricColor }}
+                                    title={item.paintingOptions.fabricColor}
+                                  />
+                                )}
+                                <span className="text-xs text-gray-500 truncate">
+                                  {item.paintingOptions.fabricColor}
+                                </span>
+                              </div>
+                            </div>
+                            
                             <div className="mt-3 pt-3 border-t border-white/10">
                               <span className="text-xs sm:text-sm text-gray-400 block mb-1">
                                 Special Instructions:
                               </span>
-                              <p className="text-xs sm:text-sm text-gray-300 break-words">
-                                {item.paintingOptions.specificDetails}
-                              </p>
+                              {editingItemId === item.id ? (
+                                <textarea
+                                  value={item.paintingOptions.specificDetails || ""}
+                                  onChange={(e) => updateItemDetails(item.id, e.target.value)}
+                                  rows={3}
+                                  className="w-full px-3 py-2 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 resize-none text-xs sm:text-sm text-gray-300"
+                                  placeholder="Enter any specific instructions for the artist..."
+                                />
+                              ) : (
+                                <p className="text-xs sm:text-sm text-gray-300 break-words">
+                                  {item.paintingOptions.specificDetails || "No special instructions"}
+                                </p>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Remove Button */}
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
+                          className="cursor-pointer w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
                         >
                           Remove from Cart
                         </button>
@@ -284,7 +384,7 @@ export default function CartPage() {
                   <button 
                     onClick={handleCheckout}
                     disabled={isProcessing || cart.length === 0}
-                    className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors mb-3 flex items-center justify-center gap-2"
+                    className="cursor-pointer w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-bold text-lg transition-colors mb-3 flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
                       <>
@@ -306,7 +406,7 @@ export default function CartPage() {
                   
                   <Link
                     href="/figurefinder"
-                    className="block text-center py-2 text-blue-400 hover:text-blue-300 transition-colors"
+                    className="cursor-pointer block text-center py-2 text-blue-400 hover:text-blue-300 transition-colors"
                   >
                     Continue Shopping
                   </Link>
@@ -316,7 +416,7 @@ export default function CartPage() {
                       <Separator className="my-4 bg-white/20" />
                       <button
                         onClick={clearCart}
-                        className="w-full py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-600/30"
+                        className="cursor-pointer w-full py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-600/30"
                       >
                         Clear Cart
                       </button>

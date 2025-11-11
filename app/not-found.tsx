@@ -22,14 +22,14 @@ export default function NotFound() {
         <div className="flex gap-4 justify-center flex-wrap">
           <Link
             href="/"
-            className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full transition-all hover:scale-105"
+            className="cursor-pointer px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-full transition-all hover:scale-105"
           >
             Return Home
           </Link>
           
           <Link
             href="/figurefinder"
-            className="px-8 py-3 bg-transparent border-2 border-white hover:bg-white/10 text-white font-bold rounded-full transition-all hover:scale-105"
+            className="cursor-pointer px-8 py-3 bg-transparent border-2 border-white hover:bg-white/10 text-white font-bold rounded-full transition-all hover:scale-105"
           >
             Browse Miniatures
           </Link>

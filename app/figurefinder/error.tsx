@@ -45,13 +45,13 @@ export default function Error({
         <div className="flex gap-4 justify-center flex-wrap">
           <button
             onClick={reset}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+            className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors inline-block"
+            className="cursor-pointer px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors inline-block"
           >
             Go home
           </Link>

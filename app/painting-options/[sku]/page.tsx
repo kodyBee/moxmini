@@ -158,13 +158,9 @@ export default function PaintingOptionsPage() {
                       onChange={(e) => setHairColor(e.target.value)}
                       className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
                     />
-                    <input
-                      type="text"
-                      value={hairColor}
-                      onChange={(e) => setHairColor(e.target.value)}
-                      className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                      placeholder="#8B4513"
-                    />
+                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                      {hairColor}
+                    </p>
                   </div>
                 </div>
 
@@ -180,13 +176,9 @@ export default function PaintingOptionsPage() {
                       onChange={(e) => setSkinColor(e.target.value)}
                       className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
                     />
-                    <input
-                      type="text"
-                      value={skinColor}
-                      onChange={(e) => setSkinColor(e.target.value)}
-                      className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                      placeholder="#FFDAB9"
-                    />
+                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                      {skinColor}
+                    </p>
                   </div>
                 </div>
 
@@ -202,13 +194,9 @@ export default function PaintingOptionsPage() {
                       onChange={(e) => setAccessoryColor(e.target.value)}
                       className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
                     />
-                    <input
-                      type="text"
-                      value={accessoryColor}
-                      onChange={(e) => setAccessoryColor(e.target.value)}
-                      className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                      placeholder="special instructions here"
-                    />
+                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                      {accessoryColor}
+                    </p>
                   </div>
                 </div>
 
@@ -224,13 +212,9 @@ export default function PaintingOptionsPage() {
                       onChange={(e) => setFabricColor(e.target.value)}
                       className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
                     />
-                    <input
-                      type="text"
-                      value={fabricColor}
-                      onChange={(e) => setFabricColor(e.target.value)}
-                      className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                      placeholder="#4169E1"
-                    />
+                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                      {fabricColor}
+                    </p>
                   </div>
                 </div>
 
@@ -253,13 +237,13 @@ export default function PaintingOptionsPage() {
                   <button
                     type="button"
                     onClick={() => router.back()}
-                    className="w-full sm:flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors text-sm sm:text-base"
+                    className="cursor-pointer w-full sm:flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors text-sm sm:text-base"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="w-full sm:flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors text-sm sm:text-base"
+                    className="cursor-pointer w-full sm:flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors text-sm sm:text-base"
                   >
                     Submit Order
                   </button>

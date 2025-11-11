@@ -31,12 +31,12 @@ export default function Home() {
             </p>
             <div className="flex gap-6 justify-center flex-wrap px-3">
               <Link href="/premade">
-                <button className="text-lg sm:text-xl md:text-2xl px-8 sm:px-12 md:px-14 py-4 sm:py-5 font-bold bg-transparent border-2 border-white hover:bg-white hover:text-blue-950 active:scale-95 active:bg-gray-200 text-white rounded-full transition-all duration-100 hover:scale-105 shadow-lg">
+                <button className="cursor-pointer text-lg sm:text-xl md:text-2xl px-8 sm:px-12 md:px-14 py-4 sm:py-5 font-bold bg-transparent border-2 border-white hover:bg-white hover:text-blue-950 active:scale-95 active:bg-gray-200 text-white rounded-full transition-all duration-100 hover:scale-105 shadow-lg">
                   Shop Prepainted Favorites
                 </button>
               </Link>
               <Link href="/figurefinder">
-                <button className="text-lg sm:text-xl md:text-2xl px-8 sm:px-12 md:px-14 py-4 sm:py-5 font-bold bg-blue-500 hover:bg-blue-600 active:scale-95 active:bg-blue-700 text-white rounded-full transition-all duration-100 hover:scale-105 shadow-lg shadow-blue-500/50">
+                <button className="cursor-pointer text-lg sm:text-xl md:text-2xl px-8 sm:px-12 md:px-14 py-4 sm:py-5 font-bold bg-blue-500 hover:bg-blue-600 active:scale-95 active:bg-blue-700 text-white rounded-full transition-all duration-100 hover:scale-105 shadow-lg shadow-blue-500/50">
                   Create Your Own
                 </button>
               </Link>
