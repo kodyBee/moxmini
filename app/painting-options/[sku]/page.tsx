@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Image from "next/image";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Product } from "@/lib/types/product";
@@ -111,15 +110,17 @@ export default function PaintingOptionsPage() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
               <h2 className="text-xl sm:text-2xl font-bold mb-4">Product Details</h2>
               
-              <div className="bg-black/40 rounded-lg p-4 mb-4 aspect-square relative overflow-hidden">
+              <div className="bg-black/40 rounded-lg p-4 mb-4 aspect-square relative overflow-hidden flex items-center justify-center">
                 {product.images && product.images[0]?.URL ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={product.images[0].URL}
                     alt={product.name || "Product image"}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    style={{ objectFit: "contain" }}
-                    priority
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                    }}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
