@@ -520,6 +520,7 @@ export default function FigureFinderPage() {
                             objectFit: "cover",
                           }}
                           priority={false}
+                          unoptimized
                         />
                         {/* Magnifier Button */}
                         <button
