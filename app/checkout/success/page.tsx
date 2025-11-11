@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -86,5 +86,20 @@ export default function CheckoutSuccessPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Navigation currentPage="cart" />
+        <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black text-white flex items-center justify-center">
+          <div className="text-xl">Loading...</div>
+        </main>
+      </>
+    }>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }
