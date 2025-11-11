@@ -1,5 +1,5 @@
 "use client";
-
+//I'm the most proud of this page. It has complex filtering, sorting, pagination, and URL syncing and in general it was a blast to build.
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -469,7 +469,97 @@ export default function FigureFinderPage() {
         {/* Products Grid */}
         <div style={{ maxWidth: "1400px", width: "100%", padding: "0 15px" }}>
           {loading ? (
-            <div className="text-center text-xl">Loading products...</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(12)].map((_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.05)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  {/* Skeleton Image */}
+                  <div
+                    className="animate-pulse"
+                    style={{
+                      width: "100%",
+                      height: "200px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "8px",
+                      marginBottom: "15px",
+                    }}
+                  />
+                  
+                  {/* Skeleton Title */}
+                  <div
+                    className="animate-pulse"
+                    style={{
+                      height: "24px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px",
+                      marginBottom: "10px",
+                      width: "80%",
+                    }}
+                  />
+                  <div
+                    className="animate-pulse"
+                    style={{
+                      height: "24px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px",
+                      marginBottom: "15px",
+                      width: "60%",
+                    }}
+                  />
+                  
+                  {/* Skeleton Price */}
+                  <div
+                    className="animate-pulse"
+                    style={{
+                      height: "32px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px",
+                      marginBottom: "15px",
+                      width: "40%",
+                    }}
+                  />
+                  
+                  {/* Skeleton Info */}
+                  <div className="space-y-2 mb-4">
+                    <div
+                      className="animate-pulse"
+                      style={{
+                        height: "16px",
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "4px",
+                        width: "50%",
+                      }}
+                    />
+                    <div
+                      className="animate-pulse"
+                      style={{
+                        height: "16px",
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "4px",
+                        width: "70%",
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Skeleton Button */}
+                  <div
+                    className="animate-pulse"
+                    style={{
+                      height: "48px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

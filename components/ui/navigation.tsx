@@ -73,7 +73,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         </Link>
 
         {/* Navigation Links */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {navItems.map((item) => (
             <Link
               key={item.page}
@@ -153,7 +153,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu options */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-slate-900/95 backdrop-blur-xl border-t border-blue-500/20">
           <div className="flex flex-col py-4 px-4 space-y-2">

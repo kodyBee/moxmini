@@ -40,7 +40,7 @@ function About() {
             className="text-3xl sm:text-4xl md:text-5xl"
             style={{ marginBottom: "10px", fontWeight: "bold" }}
           >
-            About Mox Brinkman
+            Mox Brinkman
           </h1>
           <p
             className="text-base sm:text-lg md:text-xl"
@@ -68,7 +68,9 @@ function About() {
               style={{
                 fontWeight: "bold",
                 marginBottom: "20px",
-                color: "#4488ff",
+                color: "#00D9FF",
+                paddingBottom: "10px",
+                borderBottom: "2px solid rgba(0, 217, 255, 0.3)",
               }}
             >
               About the Artist
@@ -93,7 +95,9 @@ function About() {
               style={{
                 fontWeight: "600",
                 marginBottom: "15px",
-                color: "#4488ff",
+                color: "#00D9FF",
+                paddingBottom: "8px",
+                borderBottom: "2px solid rgba(0, 217, 255, 0.2)",
               }}
             >
               Craftsmanship & Vision
@@ -117,7 +121,9 @@ function About() {
               style={{
                 fontWeight: "600",
                 marginBottom: "15px",
-                color: "#4488ff",
+                color: "#00D9FF",
+                paddingBottom: "8px",
+                borderBottom: "2px solid rgba(0, 217, 255, 0.2)",
               }}
             >
               Dedication to Excellence
@@ -182,7 +188,7 @@ function About() {
                 style={{
                   fontWeight: "600",
                   marginBottom: "10px",
-                  color: "#4488ff",
+                  color: "#00D9FF",
                 }}
               >
                 Sculpting
@@ -206,7 +212,7 @@ function About() {
                 style={{
                   fontWeight: "600",
                   marginBottom: "10px",
-                  color: "#4488ff",
+                  color: "#00D9FF",
                 }}
               >
                 Painting
@@ -230,7 +236,7 @@ function About() {
                 style={{
                   fontWeight: "600",
                   marginBottom: "10px",
-                  color: "#4488ff",
+                  color: "#00D9FF",
                 }}
               >
                 D&D Expertise
