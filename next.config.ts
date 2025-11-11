@@ -5,15 +5,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: '**.reapermini.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'www.reapermini.com',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'images.reapermini.com',
-        port: '',
-        pathname: '/**',
       },
     ],
   },
