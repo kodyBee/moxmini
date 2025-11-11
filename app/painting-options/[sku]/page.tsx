@@ -73,8 +73,66 @@ export default function PaintingOptionsPage() {
     return (
       <>
         <Navigation currentPage="figurefinder" />
-        <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black flex items-center justify-center">
-          <div className="text-white text-xl">Loading...</div>
+        <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black text-white py-6 sm:py-10 px-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Header Skeleton */}
+            <div className="text-center mb-6 sm:mb-8">
+              <Separator className="mb-4 sm:mb-6 bg-white/20" />
+              <div className="animate-pulse space-y-3">
+                <div className="h-8 bg-white/10 rounded w-64 mx-auto" />
+                <div className="h-4 bg-white/10 rounded w-48 mx-auto" />
+              </div>
+              <Separator className="mt-4 sm:mt-6 bg-white/20" />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
+              {/* Product Preview Skeleton */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
+                <div className="animate-pulse h-6 bg-white/10 rounded w-40 mb-4" />
+                
+                <div className="bg-black/40 rounded-lg p-4 mb-4 aspect-square">
+                  <div className="animate-pulse h-full bg-white/10 rounded" />
+                </div>
+
+                <div className="animate-pulse space-y-3">
+                  <div className="h-6 bg-white/10 rounded w-3/4" />
+                  <div className="h-4 bg-white/10 rounded w-32" />
+                  <div className="h-8 bg-white/10 rounded w-24" />
+                  <div className="h-4 bg-white/10 rounded w-40" />
+                </div>
+              </div>
+
+              {/* Painting Options Form Skeleton */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
+                <div className="animate-pulse h-6 bg-white/10 rounded w-48 mb-4 sm:mb-6" />
+                
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Color Picker Skeletons */}
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="animate-pulse h-4 bg-white/10 rounded w-24" />
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="animate-pulse w-16 h-10 sm:w-20 sm:h-12 bg-white/10 rounded" />
+                        <div className="animate-pulse flex-1 h-10 sm:h-12 bg-white/10 rounded-lg" />
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Textarea Skeleton */}
+                  <div className="space-y-2">
+                    <div className="animate-pulse h-4 bg-white/10 rounded w-48" />
+                    <div className="animate-pulse w-full h-32 bg-white/10 rounded-lg" />
+                  </div>
+
+                  {/* Button Skeletons */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                    <div className="animate-pulse w-full sm:flex-1 h-12 bg-white/10 rounded-lg" />
+                    <div className="animate-pulse w-full sm:flex-1 h-12 bg-white/10 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
       </>
     );
