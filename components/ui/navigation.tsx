@@ -53,11 +53,11 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
 
   return (
     <nav className="sticky top-0 w-full bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 backdrop-blur-xl border-b border-blue-500/20 shadow-lg shadow-blue-500/5 z-50">
-      <div className="flex justify-between items-center h-20 px-4 sm:px-6 lg:px-8">
+      <div className="relative flex justify-between items-center h-20 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link
           href="/"
-          className="cursor-pointer flex items-center gap-3 flex-shrink-0 transition-all duration-100 hover:scale-105 active:scale-95 active:opacity-80"
+          className="cursor-pointer flex items-center gap-3 flex-shrink-0 transition-all duration-100 hover:scale-105 active:scale-95 active:opacity-80 z-10"
         >
           <Image
             src="/moxlogosimple.png"
@@ -73,7 +73,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         </Link>
 
         {/* Navigation Links */}
-        <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+        <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
           {navItems.map((item) => (
             <Link
               key={item.page}
@@ -99,7 +99,7 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
         {/* Cart Button */}
         <Link 
           href="/cart"
-          className="cursor-pointer relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 active:from-blue-700 active:to-blue-600 text-white px-3 sm:px-5 py-2.5 rounded-lg font-semibold transition-all duration-100 flex items-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105"
+          className="cursor-pointer relative bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 active:from-blue-700 active:to-blue-600 text-white px-3 sm:px-5 py-2.5 rounded-lg font-semibold transition-all duration-100 flex items-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-105 z-10"
         >
           <svg
             className="w-5 h-5"
