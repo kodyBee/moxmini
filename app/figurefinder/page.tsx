@@ -511,16 +511,16 @@ export default function FigureFinderPage() {
                   >
                     {product.images && product.images[0]?.URL ? (
                       <>
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={product.images[0].URL}
                           alt={product.name || "Product image"}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                           style={{
+                            width: "100%",
+                            height: "100%",
                             objectFit: "cover",
                           }}
-                          priority={false}
-                          unoptimized
+                          loading="lazy"
                         />
                         {/* Magnifier Button */}
                         <button
