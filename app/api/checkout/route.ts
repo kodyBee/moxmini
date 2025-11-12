@@ -47,39 +47,48 @@ export async function POST(req: NextRequest) {
         return text.length > maxLength ? text.substring(0, maxLength - 3) + "..." : text;
       };
 
-      // Get image URL and make it absolute if it's relative
-      let imageUrl = item.product.images?.[0]?.URL;
-      if (imageUrl) {
-        // If it's a relative URL, convert it to absolute
-        if (imageUrl.startsWith('/')) {
-          const origin = req.headers.get("origin") || "https://moxmini.vercel.app";
-          imageUrl = `${origin}${imageUrl}`;
-        }
-        // Only include if it's a valid absolute URL
-        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-          // Image URL is valid
+      // Get image URL - only include if it's a valid external HTTPS URL
+      let imageUrl: string | undefined = undefined;
+      const rawImageUrl = item.product.images?.[0]?.URL;
+      
+      if (rawImageUrl) {
+        // Only include if it's already an absolute HTTPS URL (not relative paths)
+        // Stripe requires publicly accessible HTTPS URLs
+        if (rawImageUrl.startsWith('https://')) {
+          imageUrl = rawImageUrl;
+          console.log('Using image URL:', imageUrl);
         } else {
-          // Invalid URL, don't include image
-          imageUrl = undefined;
+          console.log('Skipping non-HTTPS image URL:', rawImageUrl);
         }
+      }
+
+      const productData: {
+        name: string;
+        description: string;
+        images?: string[];
+        metadata: Record<string, string>;
+      } = {
+        name: item.product.name,
+        description: `SKU: ${item.product.sku}`,
+        metadata: {
+          sku: item.product.sku,
+          hairColor: truncateText(item.paintingOptions.hairColor || "N/A", 100),
+          skinColor: truncateText(item.paintingOptions.skinColor || "N/A", 100),
+          accessoryColor: truncateText(item.paintingOptions.accessoryColor || "N/A", 100),
+          fabricColor: truncateText(item.paintingOptions.fabricColor || "N/A", 100),
+          specificDetails: truncateText(item.paintingOptions.specificDetails || "None", 490),
+        },
+      };
+
+      // Only add images array if we have a valid URL
+      if (imageUrl) {
+        productData.images = [imageUrl];
       }
 
       return {
         price_data: {
           currency: "usd",
-          product_data: {
-            name: item.product.name,
-            description: `SKU: ${item.product.sku}`,
-            images: imageUrl ? [imageUrl] : undefined,
-            metadata: {
-              sku: item.product.sku,
-              hairColor: truncateText(item.paintingOptions.hairColor || "N/A", 100),
-              skinColor: truncateText(item.paintingOptions.skinColor || "N/A", 100),
-              accessoryColor: truncateText(item.paintingOptions.accessoryColor || "N/A", 100),
-              fabricColor: truncateText(item.paintingOptions.fabricColor || "N/A", 100),
-              specificDetails: truncateText(item.paintingOptions.specificDetails || "None", 490),
-            },
-          },
+          product_data: productData,
           unit_amount: priceInCents,
         },
         quantity: 1,
