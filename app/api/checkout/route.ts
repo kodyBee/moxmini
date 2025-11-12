@@ -19,6 +19,7 @@ interface CartItemProduct {
 interface CartItemInput {
   product: CartItemProduct;
   paintingOptions: PaintingOptions;
+  wantsPainting?: boolean;
 }
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -99,18 +100,20 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Add $25 custom painting service charge for each item
-    const paintingServiceItems = cartItems.map(() => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: "Custom Painting Service",
-          description: "Professional custom painting for your miniature",
+    // Add $25 custom painting service charge only for items that want painting
+    const paintingServiceItems = cartItems
+      .filter((item: CartItemInput) => item.wantsPainting !== false) // Default to true if not specified
+      .map(() => ({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Custom Painting Service",
+            description: "Professional custom painting for your miniature",
+          },
+          unit_amount: 2500, // $25.00
         },
-        unit_amount: 2500, // $25.00
-      },
-      quantity: 1,
-    }));
+        quantity: 1,
+      }));
 
     // Combine miniature products and painting services
     const allLineItems = [...lineItems, ...paintingServiceItems];

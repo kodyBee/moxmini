@@ -12,4 +12,5 @@ export interface CartItem {
   id: string;
   product: Product;
   paintingOptions: PaintingOptions;
+  wantsPainting?: boolean;
 }

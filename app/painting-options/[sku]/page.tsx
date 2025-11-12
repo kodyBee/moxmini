@@ -15,6 +15,7 @@ export default function PaintingOptionsPage() {
   const [loading, setLoading] = useState(true);
   
   // Painting options state
+  const [wantsPainting, setWantsPainting] = useState(true);
   const [hairColor, setHairColor] = useState("#8B4513");
   const [skinColor, setSkinColor] = useState("#FFDAB9");
   const [accessoryColor, setAccessoryColor] = useState("#C0C0C0");
@@ -44,13 +45,20 @@ export default function PaintingOptionsPage() {
     // Create cart item with painting options
     const cartItem = {
       product,
-      paintingOptions: {
+      paintingOptions: wantsPainting ? {
         hairColor,
         skinColor,
         accessoryColor,
         fabricColor,
         specificDetails,
+      } : {
+        hairColor: "",
+        skinColor: "",
+        accessoryColor: "",
+        fabricColor: "",
+        specificDetails: "Unpainted miniature - no custom painting service",
       },
+      wantsPainting,
       id: `${sku}-${Date.now()}`, // Unique ID for this specific configuration
     };
 
@@ -204,91 +212,125 @@ export default function PaintingOptionsPage() {
               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Painting Options</h2>
               
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                {/* Hair Color */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Hair Color
-                  </label>
-                  <div className="flex items-center gap-2 sm:gap-4">
+                {/* Custom Painting Service Option */}
+                <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
                     <input
-                      type="color"
-                      value={hairColor}
-                      onChange={(e) => setHairColor(e.target.value)}
-                      className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
+                      type="checkbox"
+                      id="wantsPainting"
+                      checked={wantsPainting}
+                      onChange={(e) => setWantsPainting(e.target.checked)}
+                      className="mt-1 w-5 h-5 cursor-pointer accent-blue-500 flex-shrink-0"
                     />
-                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
-                      {hairColor}
-                    </p>
+                    <label htmlFor="wantsPainting" className="cursor-pointer flex-1">
+                      <div className="font-bold text-base sm:text-lg mb-1">
+                        Professional Custom Painting Service - $25.00
+                      </div>
+                      <p className="text-sm text-gray-300">
+                        {wantsPainting 
+                          ? "Your miniature will be hand-painted by our artist with your custom color choices."
+                          : "Uncheck to receive an unpainted miniature (miniature base price only)."}
+                      </p>
+                    </label>
                   </div>
                 </div>
+                {wantsPainting && (
+                  <>
+                    {/* Hair Color */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Hair Color
+                      </label>
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <input
+                          type="color"
+                          value={hairColor}
+                          onChange={(e) => setHairColor(e.target.value)}
+                          className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
+                        />
+                        <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                          {hairColor}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Skin Color */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Skin Color
-                  </label>
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <input
-                      type="color"
-                      value={skinColor}
-                      onChange={(e) => setSkinColor(e.target.value)}
-                      className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
-                    />
-                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
-                      {skinColor}
+                    {/* Skin Color */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Skin Color
+                      </label>
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <input
+                          type="color"
+                          value={skinColor}
+                          onChange={(e) => setSkinColor(e.target.value)}
+                          className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
+                        />
+                        <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                          {skinColor}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Accessory Color */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Accessory Color
+                      </label>
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <input
+                          type="color"
+                          value={accessoryColor}
+                          onChange={(e) => setAccessoryColor(e.target.value)}
+                          className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
+                        />
+                        <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                          {accessoryColor}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Fabric Color */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Fabric Color
+                      </label>
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <input
+                          type="color"
+                          value={fabricColor}
+                          onChange={(e) => setFabricColor(e.target.value)}
+                          className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
+                        />
+                        <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
+                          {fabricColor}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Specific Details */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Specific Details for the Artist
+                      </label>
+                      <textarea
+                        value={specificDetails}
+                        onChange={(e) => setSpecificDetails(e.target.value)}
+                        rows={6}
+                        className="w-full px-3 sm:px-4 py-3 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 resize-none text-sm sm:text-base"
+                        placeholder="Enter any specific instructions or details for the artist (e.g., weathering effects, specific shading style, battle damage, etc.)"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {!wantsPainting && (
+                  <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-6 text-center">
+                    <p className="text-gray-300 text-sm sm:text-base">
+                      You will receive an unpainted miniature. You can paint it yourself or leave it as is.
                     </p>
                   </div>
-                </div>
-
-                {/* Accessory Color */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Accessory Color
-                  </label>
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <input
-                      type="color"
-                      value={accessoryColor}
-                      onChange={(e) => setAccessoryColor(e.target.value)}
-                      className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
-                    />
-                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
-                      {accessoryColor}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Fabric Color */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Fabric Color
-                  </label>
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <input
-                      type="color"
-                      value={fabricColor}
-                      onChange={(e) => setFabricColor(e.target.value)}
-                      className="w-16 h-10 sm:w-20 sm:h-12 rounded cursor-pointer border-2 border-white/20 flex-shrink-0"
-                    />
-                    <p className="flex-1 min-w-0 px-3 sm:px-4 py-2 bg-black/40 border border-white/20 rounded-lg text-sm sm:text-base">
-                      {fabricColor}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Specific Details */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Specific Details for the Artist
-                  </label>
-                  <textarea
-                    value={specificDetails}
-                    onChange={(e) => setSpecificDetails(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 sm:px-4 py-3 bg-black/40 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 resize-none text-sm sm:text-base"
-                    placeholder="Enter any specific instructions or details for the artist (e.g., weathering effects, specific shading style, battle damage, etc.)"
-                  />
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">

@@ -91,6 +91,15 @@ export default function CartPage() {
     }, 0);
   };
 
+  const getPaintingServiceTotal = () => {
+    const paintingItems = cart.filter((item) => item.wantsPainting !== false);
+    return paintingItems.length * 25;
+  };
+
+  const getGrandTotal = () => {
+    return getCartTotal() + getPaintingServiceTotal();
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
@@ -205,16 +214,36 @@ export default function CartPage() {
                             <p className="text-xs sm:text-sm text-gray-400 break-all">
                               SKU: {item.product.sku}
                             </p>
+                            {item.wantsPainting !== false && (
+                              <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
+                                + Custom Painting ($25)
+                              </span>
+                            )}
                           </div>
                           <div className="text-left sm:text-right flex-shrink-0">
                             <div className="text-xl sm:text-2xl font-bold text-blue-400">
                               ${item.product.price}
                             </div>
+                            {item.wantsPainting !== false && (
+                              <div className="text-sm text-gray-400 mt-1">
+                                + $25 painting
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Painting Options or Description */}
-                        {item.product.material === "prepainted" ? (
+                        {item.wantsPainting === false ? (
+                          // Show unpainted notice
+                          <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-3 sm:p-4 mb-4">
+                            <h4 className="font-semibold text-xs sm:text-sm text-yellow-400 mb-2">
+                              ⚠️ Unpainted Miniature
+                            </h4>
+                            <p className="text-xs sm:text-sm text-gray-300 break-words">
+                              This miniature will be delivered unpainted. No custom painting service included.
+                            </p>
+                          </div>
+                        ) : item.product.material === "prepainted" ? (
                           // Show description for prepainted/premade products
                           <div className="bg-black/30 rounded-lg p-3 sm:p-4 mb-4">
                             <h4 className="font-semibold text-xs sm:text-sm text-gray-300 mb-2">
@@ -365,14 +394,23 @@ export default function CartPage() {
                   
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-gray-300">
-                      <span>Subtotal:</span>
+                      <span>Miniatures Subtotal:</span>
                       <span>${getCartTotal().toFixed(2)}</span>
                     </div>
                     
                     <div className="flex justify-between text-gray-300">
-                      <span>Painting Service:</span>
-                      <span>Included</span>
+                      <span>Custom Painting Service:</span>
+                      <span>
+                        {getPaintingServiceTotal() > 0 
+                          ? `$${getPaintingServiceTotal().toFixed(2)}` 
+                          : "$0.00"}
+                      </span>
                     </div>
+                    {getPaintingServiceTotal() > 0 && (
+                      <div className="text-xs text-gray-500 -mt-2 pl-4">
+                        {cart.filter(item => item.wantsPainting !== false).length} × $25.00
+                      </div>
+                    )}
                     
                     <div className="flex justify-between text-gray-300">
                       <span>Shipping:</span>
@@ -384,7 +422,7 @@ export default function CartPage() {
                     <div className="flex justify-between text-xl font-bold">
                       <span>Total:</span>
                       <span className="text-blue-400">
-                        ${getCartTotal().toFixed(2)}
+                        ${getGrandTotal().toFixed(2)}
                       </span>
                     </div>
                   </div>
