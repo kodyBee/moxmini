@@ -65,18 +65,25 @@ export async function POST(req: NextRequest) {
       });
 
       // Log the orders
-      console.log("New orders received:", orders);
+      console.log("New orders received from webhook:", JSON.stringify(orders, null, 2));
 
-      // Store orders in the admin API
+      // Store orders in the webhook-orders endpoint
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 
+        // Use the request origin to build the API URL
+        const origin = req.headers.get("origin") || 
+                      req.headers.get("referer")?.split("/").slice(0, 3).join("/") ||
                       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
         
-        await fetch(`${apiUrl}/api/admin/orders`, {
+        console.log("Sending orders to:", `${origin}/api/admin/webhook-orders`);
+        
+        const response = await fetch(`${origin}/api/admin/webhook-orders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ orders }),
         });
+        
+        const result = await response.json();
+        console.log("Store result:", result);
       } catch (error) {
         console.error("Failed to store orders:", error);
         // Continue anyway - webhook still succeeded
