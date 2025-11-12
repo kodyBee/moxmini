@@ -53,9 +53,22 @@ export async function POST(req: NextRequest) {
       });
 
       // Extract shipping address from session
-      // Need to retrieve full session with shipping details
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
-      const shippingDetails = (fullSession as any).shipping_details;
+      // The session object from the webhook already contains shipping_details
+      interface ShippingDetails {
+        name?: string;
+        address?: {
+          line1?: string;
+          line2?: string | null;
+          city?: string;
+          state?: string;
+          postal_code?: string;
+          country?: string;
+        };
+      }
+      
+      // Access shipping_details from the session object
+      const sessionWithShipping = session as typeof session & { shipping_details?: ShippingDetails };
+      const shippingDetails = sessionWithShipping.shipping_details;
       const shippingAddress = shippingDetails ? {
         name: shippingDetails.name || "",
         address: {
