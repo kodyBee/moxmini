@@ -18,7 +18,7 @@ const products: PremadeProduct[] = [
     originalPrice: 50,
     image: "/fighterfront.jpeg",
     description: "Metal",
-    sku: "PREMADE-001",
+    sku: "1234567",
   },
   {
     id: 2,
