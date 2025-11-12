@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("pending");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check authentication
@@ -53,65 +54,114 @@ export default function AdminDashboard() {
   }, [router]);
 
   const loadOrders = async () => {
-    // Load from localStorage first (for immediate display)
-    const savedOrders = localStorage.getItem("adminOrders");
-    let localOrders: OrderItem[] = [];
-    
-    if (savedOrders) {
-      try {
-        localOrders = JSON.parse(savedOrders);
-        setOrders(localOrders);
-      } catch (error) {
-        console.error("Error loading orders from localStorage:", error);
-      }
-    }
-
-    // Fetch from orders API endpoint
+    setIsLoading(true);
     try {
+      // Load from localStorage first (for immediate display)
+      const savedOrders = localStorage.getItem("adminOrders");
+      let localOrders: OrderItem[] = [];
+
+      if (savedOrders) {
+        try {
+          localOrders = JSON.parse(savedOrders);
+          setOrders(localOrders);
+        } catch (error) {
+          console.error("Error loading orders from localStorage:", error);
+        }
+      }
+
+      // Fetch from orders API endpoint
       console.log("Fetching orders from API...");
       const response = await fetch("/api/admin/orders");
-      
+
       if (!response.ok) {
         console.error("Failed to fetch orders:", response.status);
         return;
       }
-      
+
       const data = await response.json();
       console.log("API orders:", data.orders?.length || 0);
-      
+
       if (data.orders && Array.isArray(data.orders)) {
         // Merge with localStorage orders, avoiding duplicates
         const allOrders = [...data.orders, ...localOrders];
-        
+
         // Remove duplicates based on order ID
-        const uniqueOrders = allOrders.filter((order, index, self) =>
-          index === self.findIndex((o) => o.id === order.id)
+        const uniqueOrders = allOrders.filter(
+          (order, index, self) => index === self.findIndex((o) => o.id === order.id)
         );
-        
+
         console.log("Total unique orders:", uniqueOrders.length);
         setOrders(uniqueOrders);
-        
+
         // Save merged orders back to localStorage
         localStorage.setItem("adminOrders", JSON.stringify(uniqueOrders));
       }
     } catch (error) {
       console.error("Error loading orders from API:", error);
+      alert("Failed to load orders. Please refresh the page.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleOrderCompletion = (orderId: string) => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId ? { ...order, completed: !order.completed } : order
+  const toggleOrderCompletion = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    const newCompletedStatus = !order.completed;
+
+    // Optimistic update
+    const updatedOrders = orders.map((o) =>
+      o.id === orderId ? { ...o, completed: newCompletedStatus } : o
     );
     setOrders(updatedOrders);
-    localStorage.setItem("adminOrders", JSON.stringify(updatedOrders));
+
+    // Update in database
+    try {
+      const response = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, completed: newCompletedStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update order");
+      }
+
+      // Also update localStorage as backup
+      localStorage.setItem("adminOrders", JSON.stringify(updatedOrders));
+    } catch (error) {
+      console.error("Error updating order:", error);
+      // Revert on error
+      setOrders(orders);
+      alert("Failed to update order. Please try again.");
+    }
   };
 
-  const deleteOrder = (orderId: string) => {
-    if (confirm("Are you sure you want to delete this order?")) {
-      const updatedOrders = orders.filter(order => order.id !== orderId);
-      setOrders(updatedOrders);
+  const deleteOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to delete this order?")) return;
+
+    // Optimistic update
+    const updatedOrders = orders.filter((order) => order.id !== orderId);
+    setOrders(updatedOrders);
+
+    // Delete from database
+    try {
+      const response = await fetch(`/api/admin/orders?id=${orderId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete order");
+      }
+
+      // Also update localStorage as backup
       localStorage.setItem("adminOrders", JSON.stringify(updatedOrders));
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      // Revert on error
+      setOrders(orders);
+      alert("Failed to delete order. Please try again.");
     }
   };
 
@@ -184,20 +234,28 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            </div>
+          )}
+
           {/* Filter Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setFilter("pending")}
-              className={`cursor-pointer px-6 py-2 rounded-lg font-medium transition-colors ${
-                filter === "pending" 
-                  ? "bg-blue-500 text-white" 
-                  : "bg-white/5 hover:bg-white/10 text-gray-300"
-              }`}
-            >
-              Pending ({pendingCount})
-            </button>
-            <button
-              onClick={() => setFilter("completed")}
+          {!isLoading && (
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => setFilter("pending")}
+                className={`cursor-pointer px-6 py-2 rounded-lg font-medium transition-colors ${
+                  filter === "pending"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white/5 hover:bg-white/10 text-gray-300"
+                }`}
+              >
+                Pending ({pendingCount})
+              </button>
+              <button
+                onClick={() => setFilter("completed")}
               className={`cursor-pointer px-6 py-2 rounded-lg font-medium transition-colors ${
                 filter === "completed" 
                   ? "bg-blue-500 text-white" 
@@ -216,10 +274,11 @@ export default function AdminDashboard() {
             >
               All ({orders.length})
             </button>
-          </div>
+            </div>
+          )}
 
           {/* Orders List */}
-          {filteredOrders.length === 0 ? (
+          {!isLoading && filteredOrders.length === 0 ? (
             <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
               <p className="text-xl text-gray-400">
                 {filter === "pending" ? "No pending orders" : 
@@ -229,7 +288,7 @@ export default function AdminDashboard() {
                 Orders will appear here automatically when customers complete payment
               </p>
             </div>
-          ) : (
+          ) : !isLoading ? (
             <div className="space-y-4">
               {filteredOrders.map((order) => (
                 <div
@@ -363,7 +422,7 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </main>
     </>

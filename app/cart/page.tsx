@@ -15,7 +15,6 @@ export default function CartPage() {
   // Load cart from localStorage
   useEffect(() => {
     // Check if we just came from a successful checkout
-    const urlParams = new URLSearchParams(window.location.search);
     const fromSuccess = sessionStorage.getItem("checkoutSuccess");
     
     if (fromSuccess) {
