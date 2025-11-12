@@ -70,8 +70,23 @@ export default function AdminDashboard() {
     try {
       console.log("Fetching webhook orders...");
       const response = await fetch("/api/admin/webhook-orders");
-      const data = await response.json();
       
+      console.log("Response status:", response.status);
+      console.log("Response content-type:", response.headers.get("content-type"));
+      
+      if (!response.ok) {
+        console.error("Failed to fetch webhook orders:", response.status, response.statusText);
+        return;
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Expected JSON but got:", text.substring(0, 200));
+        return;
+      }
+      
+      const data = await response.json();
       console.log("Webhook orders response:", data);
       
       if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
