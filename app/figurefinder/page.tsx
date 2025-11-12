@@ -2,7 +2,6 @@
 //I'm the most proud of this page. It has complex filtering, sorting, pagination, and URL syncing and in general it was a blast to build.
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";

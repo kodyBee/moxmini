@@ -1,15 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// In-memory storage for orders (in production, use a database)
-let orders: any[] = [];
+interface OrderItem {
+  id: string;
+  orderId: string;
+  customerEmail: string;
+  productName: string;
+  sku: string;
+  paintingOptions: {
+    hairColor: string;
+    skinColor: string;
+    accessoryColor: string;
+    fabricColor: string;
+    specificDetails: string;
+  };
+  timestamp: number;
+  completed: boolean;
+  price: string;
+}
 
-export async function GET(req: NextRequest) {
+// In-memory storage for orders (in production, use a database)
+let orders: OrderItem[] = [];
+
+export async function GET() {
   return NextResponse.json({ orders });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { orders: newOrders } = await req.json();
+    const { orders: newOrders } = await req.json() as { orders: OrderItem[] };
     
     if (newOrders && Array.isArray(newOrders)) {
       // Add new orders to the list
@@ -29,7 +47,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const updatedOrders = await req.json();
+    const updatedOrders = await req.json() as OrderItem[];
     orders = updatedOrders;
     return NextResponse.json({ success: true });
   } catch (error) {
