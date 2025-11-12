@@ -66,32 +66,20 @@ export default function AdminDashboard() {
       }
     }
 
-    // Fetch from webhook orders endpoint
+    // Fetch from orders API endpoint
     try {
-      console.log("Fetching webhook orders...");
-      const response = await fetch("/api/admin/webhook-orders");
-      
-      console.log("Response status:", response.status);
-      console.log("Response content-type:", response.headers.get("content-type"));
+      console.log("Fetching orders from API...");
+      const response = await fetch("/api/admin/orders");
       
       if (!response.ok) {
-        console.error("Failed to fetch webhook orders:", response.status, response.statusText);
-        return;
-      }
-      
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Expected JSON but got:", text.substring(0, 200));
+        console.error("Failed to fetch orders:", response.status);
         return;
       }
       
       const data = await response.json();
-      console.log("Webhook orders response:", data);
+      console.log("API orders:", data.orders?.length || 0);
       
-      if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
-        console.log("Found webhook orders:", data.orders.length);
-        
+      if (data.orders && Array.isArray(data.orders)) {
         // Merge with localStorage orders, avoiding duplicates
         const allOrders = [...data.orders, ...localOrders];
         
@@ -100,14 +88,14 @@ export default function AdminDashboard() {
           index === self.findIndex((o) => o.id === order.id)
         );
         
+        console.log("Total unique orders:", uniqueOrders.length);
         setOrders(uniqueOrders);
-        localStorage.setItem("adminOrders", JSON.stringify(uniqueOrders));
         
-        // Clear the webhook orders after fetching them
-        await fetch("/api/admin/webhook-orders", { method: "DELETE" });
+        // Save merged orders back to localStorage
+        localStorage.setItem("adminOrders", JSON.stringify(uniqueOrders));
       }
     } catch (error) {
-      console.error("Error loading orders from webhook API:", error);
+      console.error("Error loading orders from API:", error);
     }
   };
 

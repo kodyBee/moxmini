@@ -20,7 +20,13 @@ interface OrderItem {
 }
 
 // In-memory storage for orders (in production, use a database)
-let orders: OrderItem[] = [];
+export let orders: OrderItem[] = [];
+
+// Helper function to store orders (can be called from webhook)
+export function storeOrders(newOrders: OrderItem[]) {
+  orders = [...orders, ...newOrders];
+  console.log("Orders stored, total count:", orders.length);
+}
 
 export async function GET() {
   return NextResponse.json({ orders });
