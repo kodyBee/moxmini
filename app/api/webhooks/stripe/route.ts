@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get("stripe-signature");
 
     if (!signature) {
+      console.error("Webhook error: No signature provided");
       return NextResponse.json(
         { error: "No signature provided" },
         { status: 400 }
@@ -31,8 +32,10 @@ export async function POST(req: NextRequest) {
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log(`✅ Webhook verified: ${event.type}`);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error("❌ Webhook signature verification failed:", errorMessage);
       return NextResponse.json(
         { error: "Invalid signature" },
         { status: 400 }
@@ -42,6 +45,7 @@ export async function POST(req: NextRequest) {
     // Handle the checkout.session.completed event
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      console.log(`Processing checkout session: ${session.id}`);
 
       // Get line items with expanded product data
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
@@ -73,32 +77,50 @@ export async function POST(req: NextRequest) {
       });
 
       // Log the orders
-      console.log("New orders received from webhook:", JSON.stringify(orders, null, 2));
+      console.log(`📦 New orders received from webhook (${orders.length} items):`, 
+        JSON.stringify(orders.map(o => ({ 
+          id: o.id, 
+          product: o.productName, 
+          email: o.customerEmail 
+        })), null, 2)
+      );
 
-      // Store orders directly in the shared orders array
-      // Note: In production, this should use a database
-      console.log("Storing orders in memory:", orders.length);
-      
-      // Import the orders storage directly
-      const { storeOrders } = await import("@/app/api/admin/orders/route");
-      storeOrders(orders);
-      
-      console.log("Orders stored successfully");
+      // Store orders in database
+      try {
+        const { storeOrders } = await import("@/app/api/admin/orders/route");
+        await storeOrders(orders);
+        console.log(`✅ Successfully stored ${orders.length} orders in database`);
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown error';
+        console.error("❌ Database error storing orders:", errorMessage);
+        // Still return 200 to Stripe to prevent retries, but log the error
+        return NextResponse.json({ 
+          received: true, 
+          warning: "Order received but database storage failed",
+          error: errorMessage
+        });
+      }
 
       // Return success
       return NextResponse.json({ 
         received: true, 
-        orders,
+        orderCount: orders.length,
         message: "Webhook processed successfully" 
       });
     }
 
     // Return success for other event types
-    return NextResponse.json({ received: true });
+    console.log(`ℹ️ Received ${event.type} event (not processed)`);
+    return NextResponse.json({ received: true, type: event.type });
   } catch (error) {
-    console.error("Webhook error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("❌ Webhook handler error:", errorMessage);
+    if (errorStack) {
+      console.error("Stack trace:", errorStack);
+    }
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { error: "Webhook handler failed", details: errorMessage },
       { status: 500 }
     );
   }
