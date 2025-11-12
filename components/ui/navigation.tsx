@@ -15,6 +15,12 @@ export function Navigation({ currentPage = "home" }: NavigationProps) {
   // Update cart count from localStorage
   useEffect(() => {
     const updateCartCount = () => {
+      // Check if we just completed checkout - if so, cart should be empty
+      if (sessionStorage.getItem("checkoutSuccess")) {
+        setCartCount(0);
+        return;
+      }
+      
       const savedCart = localStorage.getItem("cart");
       if (savedCart) {
         try {

@@ -9,30 +9,41 @@ import { Separator } from "@/components/ui/separator";
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const [cartCleared, setCartCleared] = React.useState(false);
 
-  useEffect(() => {
-    // Clear the cart after successful payment
-    if (sessionId) {
-      localStorage.removeItem("cart");
-      window.dispatchEvent(new Event("cartUpdated"));
-      
-      // Also mark this session as processed to prevent re-clearing
+  // Clear cart immediately on mount - run once
+  React.useEffect(() => {
+    if (sessionId && !cartCleared) {
+      // Check if this session has already been processed
       const processedSessions = JSON.parse(localStorage.getItem("processedSessions") || "[]");
+      
       if (!processedSessions.includes(sessionId)) {
+        // Clear the cart
+        localStorage.removeItem("cart");
+        
+        // Set flag for other pages to know we just completed checkout
+        sessionStorage.setItem("checkoutSuccess", "true");
+        
+        // Mark session as processed
         processedSessions.push(sessionId);
         localStorage.setItem("processedSessions", JSON.stringify(processedSessions));
+        
+        // Force update navigation cart count
+        window.dispatchEvent(new Event("cartUpdated"));
+        window.dispatchEvent(new StorageEvent("storage", {
+          key: "cart",
+          oldValue: localStorage.getItem("cart"),
+          newValue: null,
+          url: window.location.href,
+          storageArea: localStorage
+        }));
+        
+        setCartCleared(true);
+      } else {
+        setCartCleared(true);
       }
     }
-  }, [sessionId]);
-
-  // Clear cart immediately on mount if we have a session ID
-  if (sessionId && typeof window !== "undefined") {
-    const cart = localStorage.getItem("cart");
-    if (cart) {
-      localStorage.removeItem("cart");
-      window.dispatchEvent(new Event("cartUpdated"));
-    }
-  }
+  }, [sessionId, cartCleared]);
 
   return (
     <>

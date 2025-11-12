@@ -14,12 +14,23 @@ export default function CartPage() {
 
   // Load cart from localStorage
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Error loading cart:", error);
+    // Check if we just came from a successful checkout
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromSuccess = sessionStorage.getItem("checkoutSuccess");
+    
+    if (fromSuccess) {
+      // Clear the cart if coming from success page
+      localStorage.removeItem("cart");
+      sessionStorage.removeItem("checkoutSuccess");
+      setCart([]);
+    } else {
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) {
+        try {
+          setCart(JSON.parse(savedCart));
+        } catch (error) {
+          console.error("Error loading cart:", error);
+        }
       }
     }
     setIsLoaded(true);
