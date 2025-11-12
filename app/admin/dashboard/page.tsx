@@ -20,6 +20,17 @@ interface OrderItem {
   productName: string;
   sku: string;
   paintingOptions: PaintingOptions;
+  shippingAddress?: {
+    name: string;
+    address: {
+      line1: string;
+      line2?: string;
+      city: string;
+      state: string;
+      postal_code: string;
+      country: string;
+    };
+  };
   timestamp: number;
   completed: boolean;
   price: string;
@@ -316,6 +327,26 @@ export default function AdminDashboard() {
                           <p className="text-xs text-gray-400">{order.customerEmail}</p>
                         </div>
                       </div>
+
+                      {/* Shipping Address */}
+                      {order.shippingAddress && (
+                        <div className="bg-black/30 rounded-lg p-4 mb-4">
+                          <h4 className="font-semibold text-sm text-gray-300 mb-2">
+                            📦 Shipping Address:
+                          </h4>
+                          <div className="text-sm text-gray-300 space-y-1">
+                            <p className="font-medium">{order.shippingAddress.name}</p>
+                            <p>{order.shippingAddress.address.line1}</p>
+                            {order.shippingAddress.address.line2 && (
+                              <p>{order.shippingAddress.address.line2}</p>
+                            )}
+                            <p>
+                              {order.shippingAddress.address.city}, {order.shippingAddress.address.state} {order.shippingAddress.address.postal_code}
+                            </p>
+                            <p>{order.shippingAddress.address.country}</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Painting Instructions */}
                       {order.paintingOptions.hairColor !== "" && (

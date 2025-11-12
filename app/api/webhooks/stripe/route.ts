@@ -52,29 +52,51 @@ export async function POST(req: NextRequest) {
         expand: ["data.price.product"],
       });
 
-      // Extract order details
-      const orders = lineItems.data.map((item) => {
-        const product = item.price?.product as Stripe.Product;
-        const metadata = product.metadata || {};
+      // Extract shipping address from session
+      // Need to retrieve full session with shipping details
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+      const shippingDetails = (fullSession as any).shipping_details;
+      const shippingAddress = shippingDetails ? {
+        name: shippingDetails.name || "",
+        address: {
+          line1: shippingDetails.address?.line1 || "",
+          line2: shippingDetails.address?.line2 || undefined,
+          city: shippingDetails.address?.city || "",
+          state: shippingDetails.address?.state || "",
+          postal_code: shippingDetails.address?.postal_code || "",
+          country: shippingDetails.address?.country || "",
+        },
+      } : undefined;
 
-        return {
-          id: `${session.id}-${item.id}`,
-          orderId: session.id,
-          customerEmail: session.customer_details?.email || "No email",
-          productName: product.name || item.description || "Unknown Product",
-          sku: metadata.sku || "N/A",
-          paintingOptions: {
-            hairColor: metadata.hairColor || "N/A",
-            skinColor: metadata.skinColor || "N/A",
-            accessoryColor: metadata.accessoryColor || "N/A",
-            fabricColor: metadata.fabricColor || "N/A",
-            specificDetails: metadata.specificDetails || "None",
-          },
-          timestamp: Date.now(),
-          completed: false,
-          price: ((item.amount_total || 0) / 100).toFixed(2),
-        };
-      });
+      // Extract order details - filter out painting service items
+      const orders = lineItems.data
+        .filter((item) => {
+          const product = item.price?.product as Stripe.Product;
+          return product.name !== "Custom Painting Service";
+        })
+        .map((item) => {
+          const product = item.price?.product as Stripe.Product;
+          const metadata = product.metadata || {};
+
+          return {
+            id: `${session.id}-${item.id}`,
+            orderId: session.id,
+            customerEmail: session.customer_details?.email || "No email",
+            productName: product.name || item.description || "Unknown Product",
+            sku: metadata.sku || "N/A",
+            paintingOptions: {
+              hairColor: metadata.hairColor || "N/A",
+              skinColor: metadata.skinColor || "N/A",
+              accessoryColor: metadata.accessoryColor || "N/A",
+              fabricColor: metadata.fabricColor || "N/A",
+              specificDetails: metadata.specificDetails || "None",
+            },
+            shippingAddress,
+            timestamp: Date.now(),
+            completed: false,
+            price: ((item.amount_total || 0) / 100).toFixed(2),
+          };
+        });
 
       // Log the orders
       console.log(`📦 New orders received from webhook (${orders.length} items):`, 

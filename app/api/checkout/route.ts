@@ -99,11 +99,30 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Create Checkout Session
+    // Add $25 custom painting service charge for each item
+    const paintingServiceItems = cartItems.map(() => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Custom Painting Service",
+          description: "Professional custom painting for your miniature",
+        },
+        unit_amount: 2500, // $25.00
+      },
+      quantity: 1,
+    }));
+
+    // Combine miniature products and painting services
+    const allLineItems = [...lineItems, ...paintingServiceItems];
+
+    // Create Checkout Session with shipping address collection
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: lineItems,
+      line_items: allLineItems,
       mode: "payment",
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA"], // Add more countries as needed
+      },
       success_url: `${req.headers.get("origin")}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/cart`,
       metadata: {
