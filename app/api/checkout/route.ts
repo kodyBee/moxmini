@@ -47,15 +47,30 @@ export async function POST(req: NextRequest) {
         return text.length > maxLength ? text.substring(0, maxLength - 3) + "..." : text;
       };
 
+      // Get image URL and make it absolute if it's relative
+      let imageUrl = item.product.images?.[0]?.URL;
+      if (imageUrl) {
+        // If it's a relative URL, convert it to absolute
+        if (imageUrl.startsWith('/')) {
+          const origin = req.headers.get("origin") || "https://moxmini.vercel.app";
+          imageUrl = `${origin}${imageUrl}`;
+        }
+        // Only include if it's a valid absolute URL
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          // Image URL is valid
+        } else {
+          // Invalid URL, don't include image
+          imageUrl = undefined;
+        }
+      }
+
       return {
         price_data: {
           currency: "usd",
           product_data: {
             name: item.product.name,
             description: `SKU: ${item.product.sku}`,
-            images: item.product.images?.[0]?.URL 
-              ? [item.product.images[0].URL] 
-              : undefined,
+            images: imageUrl ? [imageUrl] : undefined,
             metadata: {
               sku: item.product.sku,
               hairColor: truncateText(item.paintingOptions.hairColor || "N/A", 100),

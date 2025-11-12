@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -173,12 +172,11 @@ export default function CartPage() {
                       {/* Product Image */}
                       <div className="flex-shrink-0 w-full sm:w-32 h-48 sm:h-32 bg-black/40 rounded-lg relative overflow-hidden">
                         {item.product.images && item.product.images[0]?.URL ? (
-                          <Image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             src={item.product.images[0].URL}
                             alt={item.product.name || "Product image"}
-                            fill
-                            sizes="(max-width: 640px) 100vw, 128px"
-                            style={{ objectFit: "cover" }}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           />
                         ) : (
                           <div className="flex items-center justify-center h-full text-gray-500 text-xs">
