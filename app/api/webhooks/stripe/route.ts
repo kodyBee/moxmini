@@ -64,10 +64,25 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      // Log the orders (in production, you'd save to a database)
+      // Log the orders
       console.log("New orders received:", orders);
 
-      // Return the orders in the response so they can be fetched by the admin dashboard
+      // Store orders in the admin API
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 
+                      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+        
+        await fetch(`${apiUrl}/api/admin/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orders }),
+        });
+      } catch (error) {
+        console.error("Failed to store orders:", error);
+        // Continue anyway - webhook still succeeded
+      }
+
+      // Return success
       return NextResponse.json({ 
         received: true, 
         orders,

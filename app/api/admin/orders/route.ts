@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Order item interface for admin dashboard
 interface OrderItem {
   id: string;
   orderId: string;

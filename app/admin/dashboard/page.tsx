@@ -52,14 +52,36 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-  const loadOrders = () => {
+  const loadOrders = async () => {
+    // Load from localStorage first (for immediate display)
     const savedOrders = localStorage.getItem("adminOrders");
     if (savedOrders) {
       try {
         setOrders(JSON.parse(savedOrders));
       } catch (error) {
-        console.error("Error loading orders:", error);
+        console.error("Error loading orders from localStorage:", error);
       }
+    }
+
+    // Then fetch from API (webhook orders)
+    try {
+      const response = await fetch("/api/admin/orders");
+      const data = await response.json();
+      if (data.orders && Array.isArray(data.orders)) {
+        // Merge with localStorage orders, avoiding duplicates
+        const localOrders = savedOrders ? JSON.parse(savedOrders) : [];
+        const allOrders = [...data.orders, ...localOrders];
+        
+        // Remove duplicates based on order ID
+        const uniqueOrders = allOrders.filter((order, index, self) =>
+          index === self.findIndex((o) => o.id === order.id)
+        );
+        
+        setOrders(uniqueOrders);
+        localStorage.setItem("adminOrders", JSON.stringify(uniqueOrders));
+      }
+    } catch (error) {
+      console.error("Error loading orders from API:", error);
     }
   };
 
@@ -114,12 +136,20 @@ export default function AdminDashboard() {
               <h1 className="text-4xl font-bold mb-2">Artist Dashboard</h1>
               <p className="text-gray-400">Manage painting orders</p>
             </div>
-            <button
-              onClick={logout}
-              className="cursor-pointer px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
-            >
-              Logout
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={loadOrders}
+                className="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+              >
+                Refresh Orders
+              </button>
+              <button
+                onClick={logout}
+                className="cursor-pointer px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           <Separator className="mb-8 bg-white/20" />

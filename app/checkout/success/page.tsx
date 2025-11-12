@@ -15,8 +15,24 @@ function CheckoutSuccessContent() {
     if (sessionId) {
       localStorage.removeItem("cart");
       window.dispatchEvent(new Event("cartUpdated"));
+      
+      // Also mark this session as processed to prevent re-clearing
+      const processedSessions = JSON.parse(localStorage.getItem("processedSessions") || "[]");
+      if (!processedSessions.includes(sessionId)) {
+        processedSessions.push(sessionId);
+        localStorage.setItem("processedSessions", JSON.stringify(processedSessions));
+      }
     }
   }, [sessionId]);
+
+  // Clear cart immediately on mount if we have a session ID
+  if (sessionId && typeof window !== "undefined") {
+    const cart = localStorage.getItem("cart");
+    if (cart) {
+      localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("cartUpdated"));
+    }
+  }
 
   return (
     <>
