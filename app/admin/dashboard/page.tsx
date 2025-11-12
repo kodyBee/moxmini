@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("pending");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   useEffect(() => {
     // Check authentication
@@ -67,51 +68,61 @@ export default function AdminDashboard() {
   const loadOrders = async () => {
     setIsLoading(true);
     try {
-      // Load from localStorage first (for immediate display)
-      const savedOrders = localStorage.getItem("adminOrders");
-      let localOrders: OrderItem[] = [];
-
-      if (savedOrders) {
-        try {
-          localOrders = JSON.parse(savedOrders);
-          setOrders(localOrders);
-        } catch (error) {
-          console.error("Error loading orders from localStorage:", error);
-        }
-      }
-
-      // Fetch from orders API endpoint
-      console.log("Fetching orders from API...");
-      const response = await fetch("/api/admin/orders");
+      // Fetch from orders API endpoint first
+      console.log("Fetching orders from database...");
+      const response = await fetch("/api/admin/orders", {
+        cache: 'no-store', // Force fresh data, no caching
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
 
       if (!response.ok) {
-        console.error("Failed to fetch orders:", response.status);
-        return;
+        console.error("Failed to fetch orders from database:", response.status);
+        throw new Error(`API returned ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("API orders:", data.orders?.length || 0);
+      console.log("Database orders received:", data.orders?.length || 0);
 
       if (data.orders && Array.isArray(data.orders)) {
-        // Merge with localStorage orders, avoiding duplicates
-        const allOrders = [...data.orders, ...localOrders];
-
-        // Remove duplicates based on order ID
-        const uniqueOrders = allOrders.filter(
-          (order, index, self) => index === self.findIndex((o) => o.id === order.id)
-        );
-
-        console.log("Total unique orders:", uniqueOrders.length);
-        setOrders(uniqueOrders);
-
-        // Save merged orders back to localStorage
-        localStorage.setItem("adminOrders", JSON.stringify(uniqueOrders));
+        // Use database orders as the source of truth
+        setOrders(data.orders);
+        
+        // Update localStorage cache
+        localStorage.setItem("adminOrders", JSON.stringify(data.orders));
+        console.log("Orders loaded successfully from database");
+      } else {
+        console.warn("No orders array in response, checking localStorage backup");
+        // Fallback to localStorage only if database fails
+        const savedOrders = localStorage.getItem("adminOrders");
+        if (savedOrders) {
+          const localOrders = JSON.parse(savedOrders);
+          setOrders(localOrders);
+          console.log("Loaded from localStorage backup:", localOrders.length);
+        }
       }
     } catch (error) {
-      console.error("Error loading orders from API:", error);
-      alert("Failed to load orders. Please refresh the page.");
+      console.error("Error loading orders from database:", error);
+      
+      // Try localStorage as fallback
+      const savedOrders = localStorage.getItem("adminOrders");
+      if (savedOrders) {
+        try {
+          const localOrders = JSON.parse(savedOrders);
+          setOrders(localOrders);
+          console.log("Using localStorage backup due to database error");
+          alert("⚠️ Could not connect to database. Showing cached orders. Database may not be configured.");
+        } catch (parseError) {
+          console.error("Error parsing localStorage:", parseError);
+          alert("Failed to load orders. Please check console for errors.");
+        }
+      } else {
+        alert("⚠️ No orders found. Database connection may not be configured or no orders exist yet.");
+      }
     } finally {
       setIsLoading(false);
+      setLastRefresh(new Date());
     }
   };
 
@@ -210,13 +221,34 @@ export default function AdminDashboard() {
             <div>
               <h1 className="text-4xl font-bold mb-2">Artist Dashboard</h1>
               <p className="text-gray-400">Manage painting orders</p>
+              {lastRefresh && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Last refreshed: {lastRefresh.toLocaleTimeString()}
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={loadOrders}
-                className="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+                disabled={isLoading}
+                className="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                Refresh Orders
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh Orders
+                  </>
+                )}
               </button>
               <button
                 onClick={logout}
