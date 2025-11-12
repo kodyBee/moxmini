@@ -349,10 +349,10 @@ export default function AdminDashboard() {
                       )}
 
                       {/* Painting Instructions */}
-                      {order.paintingOptions.hairColor !== "" && (
+                      {order.paintingOptions.hairColor !== "" ? (
                         <div className="bg-black/30 rounded-lg p-4 mb-4">
                           <h4 className="font-semibold text-sm text-gray-300 mb-3">
-                            Painting Colors:
+                            🎨 Painting Colors:
                           </h4>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
@@ -413,6 +413,15 @@ export default function AdminDashboard() {
                               </p>
                             </div>
                           )}
+                        </div>
+                      ) : (
+                        <div className="bg-gray-800/50 border border-yellow-600/30 rounded-lg p-4 mb-4">
+                          <h4 className="font-semibold text-sm text-yellow-400 mb-2">
+                            ⚠️ Unpainted Miniature Order
+                          </h4>
+                          <p className="text-sm text-gray-300">
+                            Customer requested to receive this miniature unpainted. No custom painting service was selected.
+                          </p>
                         </div>
                       )}
 
