@@ -47,13 +47,10 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       console.log(`Processing checkout session: ${session.id}`);
 
-      // Get line items with expanded product data
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-        expand: ["data.price.product"],
-      });
-
-      // Extract shipping address from session
-      // The session object from the webhook already contains shipping_details
+      // Retrieve the full session with shipping details
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+      
+      // Define shipping details interface
       interface ShippingDetails {
         name?: string;
         address?: {
@@ -66,9 +63,16 @@ export async function POST(req: NextRequest) {
         };
       }
       
-      // Access shipping_details from the session object
-      const sessionWithShipping = session as typeof session & { shipping_details?: ShippingDetails };
+      // Access shipping_details from the full session
+      const sessionWithShipping = fullSession as typeof fullSession & { shipping_details?: ShippingDetails };
       const shippingDetails = sessionWithShipping.shipping_details;
+      console.log(`� Shipping details retrieved:`, shippingDetails ? 'YES' : 'NO');
+      console.log(`�📦 Shipping info:`, shippingDetails ? JSON.stringify(shippingDetails, null, 2) : 'None');
+
+      // Get line items with expanded product data
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+        expand: ["data.price.product"],
+      });
       const shippingAddress = shippingDetails ? {
         name: shippingDetails.name || "",
         address: {
