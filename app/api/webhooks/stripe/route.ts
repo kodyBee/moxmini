@@ -47,31 +47,34 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       console.log(`Processing checkout session: ${session.id}`);
 
-      // Retrieve the full session - shipping_details is a standard property
+      // Retrieve the full session
       const fullSession = await stripe.checkout.sessions.retrieve(session.id);
       
-      // Type assertion for shipping_details (it exists but isn't in TypeScript types)
-      type SessionWithShipping = Stripe.Checkout.Session & {
-        shipping_details?: {
-          name?: string;
-          address?: {
-            line1?: string;
-            line2?: string | null;
-            city?: string;
-            state?: string;
-            postal_code?: string;
-            country?: string;
-          };
-        } | null;
-      };
+      console.log(`📋 Customer details:`, JSON.stringify(fullSession.customer_details, null, 2));
       
-      // Extract shipping details
-      const shippingDetails = (fullSession as SessionWithShipping).shipping_details || null;
-      console.log(`📍 Shipping details present:`, !!shippingDetails);
+      // Extract shipping address from customer_details (where Stripe stores it with shipping_address_collection)
+      const shippingFromCustomer = fullSession.customer_details?.address;
+      const shippingName = fullSession.customer_details?.name;
+      
+      console.log(`📍 Shipping address in customer_details:`, !!shippingFromCustomer);
+      
+      // Build shipping details object from customer_details
+      const shippingDetails = shippingFromCustomer ? {
+        name: shippingName || "",
+        address: {
+          line1: shippingFromCustomer.line1 || "",
+          line2: shippingFromCustomer.line2 || undefined,
+          city: shippingFromCustomer.city || "",
+          state: shippingFromCustomer.state || "",
+          postal_code: shippingFromCustomer.postal_code || "",
+          country: shippingFromCustomer.country || "",
+        }
+      } : null;
+      
       if (shippingDetails) {
-        console.log(` Shipping to: ${shippingDetails.name} at ${shippingDetails.address?.line1}, ${shippingDetails.address?.city}, ${shippingDetails.address?.state}`);
+        console.log(`📦 Shipping to: ${shippingDetails.name} at ${shippingDetails.address.line1}, ${shippingDetails.address.city}, ${shippingDetails.address.state}`);
       } else {
-        console.log(`⚠️ No shipping address collected for session ${session.id}`);
+        console.log(`⚠️ No shipping address found for session ${session.id}`);
       }
 
       // Get line items with expanded product data
