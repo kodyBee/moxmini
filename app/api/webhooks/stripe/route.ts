@@ -47,27 +47,32 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       console.log(`Processing checkout session: ${session.id}`);
 
-      // Retrieve the full session with shipping details
+      // Retrieve the full session - shipping_details is a standard property
       const fullSession = await stripe.checkout.sessions.retrieve(session.id);
       
-      // Define shipping details interface
-      interface ShippingDetails {
-        name?: string;
-        address?: {
-          line1?: string;
-          line2?: string | null;
-          city?: string;
-          state?: string;
-          postal_code?: string;
-          country?: string;
-        };
-      }
+      // Type assertion for shipping_details (it exists but isn't in TypeScript types)
+      type SessionWithShipping = Stripe.Checkout.Session & {
+        shipping_details?: {
+          name?: string;
+          address?: {
+            line1?: string;
+            line2?: string | null;
+            city?: string;
+            state?: string;
+            postal_code?: string;
+            country?: string;
+          };
+        } | null;
+      };
       
-      // Access shipping_details from the full session
-      const sessionWithShipping = fullSession as typeof fullSession & { shipping_details?: ShippingDetails };
-      const shippingDetails = sessionWithShipping.shipping_details;
-      console.log(`� Shipping details retrieved:`, shippingDetails ? 'YES' : 'NO');
-      console.log(`�📦 Shipping info:`, shippingDetails ? JSON.stringify(shippingDetails, null, 2) : 'None');
+      // Extract shipping details
+      const shippingDetails = (fullSession as SessionWithShipping).shipping_details || null;
+      console.log(`📍 Shipping details present:`, !!shippingDetails);
+      if (shippingDetails) {
+        console.log(` Shipping to: ${shippingDetails.name} at ${shippingDetails.address?.line1}, ${shippingDetails.address?.city}, ${shippingDetails.address?.state}`);
+      } else {
+        console.log(`⚠️ No shipping address collected for session ${session.id}`);
+      }
 
       // Get line items with expanded product data
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
