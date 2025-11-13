@@ -33,6 +33,7 @@ export default function CartPage() {
       }
     }
     setIsLoaded(true);
+    setIsProcessing(false);
   }, []);
 
   const removeFromCart = (itemId: string) => {
