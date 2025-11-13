@@ -12,7 +12,7 @@ export default function Home() {
         <div 
           className="min-h-[85vh] flex flex-col items-center justify-end px-6 py-20 sm:py-32 lg:py-40 text-center relative overflow-hidden"
         >
-          {/* Optimized background image - no blur/scale transforms */}
+          {/* background image, moved it down some with background position */}
           <div 
             className="absolute inset-0 bg-[url('/Hero%20Background.jpg')] bg-center bg-cover"
             style={{

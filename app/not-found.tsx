@@ -14,7 +14,7 @@ export default function NotFound() {
         </h2>
         
         <p className="text-lg text-gray-300 mb-8">
-          The miniature you&apos;re looking for seems to have wandered off the map.
+          The miniature you&apos;re looking for is currently running away from the plot.
         </p>
         
         <Separator className="mb-8 bg-white/20 max-w-md mx-auto" />
