@@ -39,7 +39,7 @@ interface OrderItem {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("pending");
   const [isLoading, setIsLoading] = useState(true);
