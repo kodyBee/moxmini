@@ -31,6 +31,12 @@ export interface OrderItem {
 
 // Initialize database table
 export async function initDatabase() {
+  // Check if database URL is configured
+  if (!process.env.POSTGRES_URL) {
+    console.warn("⚠️ POSTGRES_URL not configured. Database features will not work.");
+    throw new Error("Database not configured. Please set POSTGRES_URL environment variable.");
+  }
+
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS orders (

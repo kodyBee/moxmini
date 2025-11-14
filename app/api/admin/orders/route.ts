@@ -26,12 +26,24 @@ export async function storeOrders(newOrders: OrderItem[]) {
 
 export async function GET() {
   try {
+    // Check if database is configured
+    if (!process.env.POSTGRES_URL) {
+      console.warn("POSTGRES_URL not configured, returning empty orders");
+      return NextResponse.json({ 
+        orders: [],
+        warning: "Database not configured. Please set POSTGRES_URL environment variable."
+      });
+    }
+
     await ensureDatabase();
     const orders = await getOrders();
     return NextResponse.json({ orders });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    return NextResponse.json({ orders: [] });
+    return NextResponse.json({ 
+      orders: [],
+      error: error instanceof Error ? error.message : "Database error"
+    });
   }
 }
 
