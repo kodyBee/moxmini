@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
 
@@ -12,19 +13,30 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // Simple authentication check
-    if (username === "artist" && password === "1z2x3s") {
-      // Set authentication token in localStorage
-      localStorage.setItem("adminAuth", "authenticated");
-      localStorage.setItem("adminAuthTime", Date.now().toString());
-      router.push("/admin/dashboard");
-    } else {
-      setError("Invalid username or password");
+    try {
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid username or password");
+        setIsLoading(false);
+      } else if (result?.ok) {
+        // Clear any old localStorage auth data
+        localStorage.removeItem("adminAuth");
+        localStorage.removeItem("adminAuthTime");
+        router.push("/admin/dashboard");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
       setIsLoading(false);
     }
   };

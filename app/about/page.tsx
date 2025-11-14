@@ -1,5 +1,5 @@
 "use client";
-
+{/*this page needs the most work. I put in generic stuff and its pretty impersonal. Might convert to an FAQ page later on down the road */}
 import React from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";

@@ -26,7 +26,7 @@ export default function Home() {
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight max-w-6xl">
               Epic Miniatures for Legendary Adventures
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 mb-12 sm:mb-16 max-w-4xl mx-auto px-3 leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 mb-12 sm:mb-16 max-w-4xl mx-auto px-3 leading-relaxed tabindex={0}">
               Professionally painted miniatures that transform your D&D campaigns into unforgettable stories
             </p>
             <div className="flex gap-6 justify-center flex-wrap px-3">

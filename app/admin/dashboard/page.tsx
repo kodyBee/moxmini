@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
 
@@ -38,32 +39,27 @@ interface OrderItem {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("pending");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Check authentication
-    const auth = localStorage.getItem("adminAuth");
-    const authTime = localStorage.getItem("adminAuthTime");
-    
-    if (auth === "authenticated" && authTime) {
-      // Session expires after 24 hours
-      const timeDiff = Date.now() - parseInt(authTime);
-      if (timeDiff < 24 * 60 * 60 * 1000) {
-        setIsAuthenticated(true);
-        loadOrders();
-      } else {
-        localStorage.removeItem("adminAuth");
-        localStorage.removeItem("adminAuthTime");
-        router.push("/admin/login");
-      }
-    } else {
-      router.push("/admin/login");
+    // Check authentication with NextAuth
+    if (status === "loading") {
+      return; // Still checking session
     }
-  }, [router]);
+
+    if (status === "unauthenticated") {
+      router.push("/admin/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      loadOrders();
+    }
+  }, [status, router]);
 
   const loadOrders = async () => {
     setIsLoading(true);
@@ -187,10 +183,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("adminAuthTime");
-    router.push("/admin/login");
+  const logout = async () => {
+    await signOut({ callbackUrl: "/admin/login" });
   };
 
   const filteredOrders = orders.filter(order => {
@@ -202,12 +196,16 @@ export default function AdminDashboard() {
   const pendingCount = orders.filter(o => !o.completed).length;
   const completedCount = orders.filter(o => o.completed).length;
 
-  if (!isAuthenticated) {
+  if (status === "loading") {
     return (
       <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black text-white flex items-center justify-center">
         <div className="text-xl">Checking authentication...</div>
       </main>
     );
+  }
+
+  if (status === "unauthenticated") {
+    return null; // Will redirect in useEffect
   }
 
   return (
