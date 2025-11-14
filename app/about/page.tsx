@@ -40,7 +40,7 @@ function About() {
             className="text-3xl sm:text-4xl md:text-5xl"
             style={{ marginBottom: "10px", fontWeight: "bold" }}
           >
-            Mox Brinkman
+            Mox 
           </h1>
           <p
             className="text-base sm:text-lg md:text-xl"
@@ -84,7 +84,7 @@ function About() {
                 marginBottom: "20px",
               }}
             >
-              Mox Brinkman is a hardworking and talented artist dedicated to
+              Mox is a hardworking and talented artist dedicated to
               creating world-class miniatures for Dungeons & Dragons. With
               meticulous attention to detail and an unwavering passion for the
               craft, Mox brings fantasy worlds to life one miniature at a time.
