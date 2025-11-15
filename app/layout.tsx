@@ -52,10 +52,10 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             {children}
+            <Analytics/>
           </CartProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
-<Analytics/>
