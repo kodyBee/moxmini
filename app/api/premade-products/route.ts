@@ -1,17 +1,8 @@
 import { NextResponse } from "next/server";
+import { getPremadeProducts, type PremadeProduct } from "@/lib/db";
 
-export interface PremadeProduct {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice: number;
-  image: string;
-  description: string;
-  sku: string;
-  wantsPainting?: boolean;
-}
-
-const products: PremadeProduct[] = [
+// Fallback products in case database is not configured
+const fallbackProducts: PremadeProduct[] = [
   {
     id: 1,
     name: "Human Fighter",
@@ -20,7 +11,6 @@ const products: PremadeProduct[] = [
     image: "/fighterfront.jpeg",
     description: "Metal",
     sku: "1234567",
-    wantsPainting: false
   },
   {
     id: 2,
@@ -56,7 +46,7 @@ const products: PremadeProduct[] = [
     originalPrice: 89.99,
     image: "https://via.placeholder.com/300x300",
     description: "Great value for money",
-    sku: "PREMADE-004",
+    sku: "PREMADE-005",
   },
    {
     id: 6,
@@ -65,7 +55,7 @@ const products: PremadeProduct[] = [
     originalPrice: 89.99,
     image: "https://via.placeholder.com/300x300",
     description: "Great value for money",
-    sku: "PREMADE-004",
+    sku: "PREMADE-006",
   },
    {
     id: 7,
@@ -74,10 +64,26 @@ const products: PremadeProduct[] = [
     originalPrice: 89.99,
     image: "https://via.placeholder.com/300x300",
     description: "Great value for money",
-    sku: "PREMADE-004",
+    sku: "PREMADE-007",
   },
 ];
 
 export async function GET() {
-  return NextResponse.json(products);
+  try {
+    // Try to get products from database
+    const products = await getPremadeProducts();
+    
+    // If database has products, return them
+    if (products.length > 0) {
+      return NextResponse.json(products);
+    }
+    
+    // Otherwise, return fallback products
+    console.log("No products in database, using fallback products");
+    return NextResponse.json(fallbackProducts);
+  } catch (error) {
+    // If database fails, return fallback products
+    console.error("Database error, using fallback products:", error);
+    return NextResponse.json(fallbackProducts);
+  }
 }

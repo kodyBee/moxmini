@@ -225,7 +225,13 @@ export default function AdminDashboard() {
                 </p>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => router.push("/admin/dashboard/products")}
+                className="cursor-pointer px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
+              >
+                Manage Products
+              </button>
               <button
                 onClick={loadOrders}
                 disabled={isLoading}

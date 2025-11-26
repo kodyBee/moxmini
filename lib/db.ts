@@ -63,6 +63,20 @@ export async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
+    
+    await sql`
+      CREATE TABLE IF NOT EXISTS premade_products (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        price NUMERIC(10, 2) NOT NULL,
+        original_price NUMERIC(10, 2) NOT NULL,
+        image TEXT NOT NULL,
+        description TEXT NOT NULL,
+        sku TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
     console.log("Database initialized successfully");
   } catch (error) {
     console.error("Database initialization error:", error);
@@ -167,6 +181,126 @@ export async function deleteOrder(orderId: string): Promise<void> {
     `;
   } catch (error) {
     console.error("Error deleting order:", error);
+    throw error;
+  }
+}
+
+// Premade Products Functions
+
+export interface PremadeProduct {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  image: string;
+  description: string;
+  sku: string;
+}
+
+// Get all premade products
+export async function getPremadeProducts(): Promise<PremadeProduct[]> {
+  try {
+    const { rows } = await sql`
+      SELECT id, name, price, original_price, image, description, sku
+      FROM premade_products
+      ORDER BY created_at DESC
+    `;
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      price: parseFloat(row.price),
+      originalPrice: parseFloat(row.original_price),
+      image: row.image,
+      description: row.description,
+      sku: row.sku,
+    }));
+  } catch (error) {
+    console.error("Error fetching premade products:", error);
+    return [];
+  }
+}
+
+// Create a new premade product
+export async function createPremadeProduct(product: Omit<PremadeProduct, "id">): Promise<PremadeProduct> {
+  try {
+    const { rows } = await sql`
+      INSERT INTO premade_products (name, price, original_price, image, description, sku)
+      VALUES (${product.name}, ${product.price}, ${product.originalPrice}, ${product.image}, ${product.description}, ${product.sku})
+      RETURNING id, name, price, original_price, image, description, sku
+    `;
+
+    const row = rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      price: parseFloat(row.price),
+      originalPrice: parseFloat(row.original_price),
+      image: row.image,
+      description: row.description,
+      sku: row.sku,
+    };
+  } catch (error) {
+    console.error("Error creating premade product:", error);
+    throw error;
+  }
+}
+
+// Update a premade product
+export async function updatePremadeProduct(id: number, product: Partial<Omit<PremadeProduct, "id">>): Promise<void> {
+  try {
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (product.name !== undefined) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(product.name);
+    }
+    if (product.price !== undefined) {
+      updates.push(`price = $${paramIndex++}`);
+      values.push(product.price);
+    }
+    if (product.originalPrice !== undefined) {
+      updates.push(`original_price = $${paramIndex++}`);
+      values.push(product.originalPrice);
+    }
+    if (product.image !== undefined) {
+      updates.push(`image = $${paramIndex++}`);
+      values.push(product.image);
+    }
+    if (product.description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(product.description);
+    }
+    if (product.sku !== undefined) {
+      updates.push(`sku = $${paramIndex++}`);
+      values.push(product.sku);
+    }
+
+    if (updates.length === 0) return;
+
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+
+    await sql.query(
+      `UPDATE premade_products SET ${updates.join(", ")} WHERE id = $${paramIndex}`,
+      values
+    );
+  } catch (error) {
+    console.error("Error updating premade product:", error);
+    throw error;
+  }
+}
+
+// Delete a premade product
+export async function deletePremadeProduct(id: number): Promise<void> {
+  try {
+    await sql`
+      DELETE FROM premade_products WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error("Error deleting premade product:", error);
     throw error;
   }
 }
