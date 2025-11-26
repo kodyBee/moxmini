@@ -234,7 +234,7 @@ export default function CartPage() {
                         </div>
 
                         {/* Painting Options or Description */}
-                        {item.wantsPainting === false ? (
+                        {item.wantsPainting === false && item.product.material !== "prepainted" ? (
                           // Show unpainted notice
                           <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-3 sm:p-4 mb-4">
                             <h4 className="font-semibold text-xs sm:text-sm text-yellow-400 mb-2">

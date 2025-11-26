@@ -51,13 +51,7 @@ export default function Page() {
         material: "prepainted",
         description: product.description,
       },
-      paintingOptions: {
-        hairColor: "",
-        skinColor: "",
-        accessoryColor: "",
-        fabricColor: "",
-        specificDetails: "Prepainted miniature - no customization",
-      },
+      wantsPainting: false,
       id: `${product.sku}-${Date.now()}`,
     };
 

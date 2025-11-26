@@ -8,17 +8,19 @@ export interface PremadeProduct {
   image: string;
   description: string;
   sku: string;
+  wantsPainting?: boolean;
 }
 
 const products: PremadeProduct[] = [
   {
     id: 1,
     name: "Human Fighter",
-    price: 30,
-    originalPrice: 50,
+    price: 20,
+    originalPrice: 30,
     image: "/fighterfront.jpeg",
     description: "Metal",
     sku: "1234567",
+    wantsPainting: false
   },
   {
     id: 2,
