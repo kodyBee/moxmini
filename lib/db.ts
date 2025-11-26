@@ -250,7 +250,7 @@ export async function createPremadeProduct(product: Omit<PremadeProduct, "id">):
 export async function updatePremadeProduct(id: number, product: Partial<Omit<PremadeProduct, "id">>): Promise<void> {
   try {
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (product.name !== undefined) {

@@ -278,7 +278,7 @@ export default function ProductsManagement() {
             <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
               <p className="text-xl text-gray-400">No products yet</p>
               <p className="text-sm text-gray-500 mt-2">
-                Click "Add New Product" to create your first product
+                Click &quot;Add New Product&quot; to create your first product
               </p>
             </div>
           ) : (

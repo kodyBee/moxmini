@@ -6,7 +6,6 @@ import {
   createPremadeProduct,
   updatePremadeProduct,
   deletePremadeProduct,
-  type PremadeProduct,
 } from "@/lib/db";
 
 // GET - Fetch all premade products
