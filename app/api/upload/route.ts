@@ -35,9 +35,14 @@ export async function POST(request: NextRequest) {
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     const pathname = folder ? `${folder}/${fileName}` : fileName;
 
+    // Convert File to ArrayBuffer for compatibility with @vercel/blob v0.0.2
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     // Upload to Vercel Blob
-    const blob = await put(pathname, file, {
+    const blob = await put(pathname, buffer, {
       token: process.env.BLOB_READ_WRITE_TOKEN!,
+      contentType: file.type,
     });
 
     return NextResponse.json({
