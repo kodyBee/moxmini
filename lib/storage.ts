@@ -1,4 +1,4 @@
-import { put, remove } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 
 /**
  * Upload a file to Vercel Blob Storage
@@ -17,6 +17,7 @@ export async function uploadFile(
 
   try {
     const blob = await put(pathname, file, {
+      access: 'public',
       token: process.env.BLOB_READ_WRITE_TOKEN!,
     });
 
@@ -33,7 +34,7 @@ export async function uploadFile(
  */
 export async function deleteFile(url: string): Promise<void> {
   try {
-    await remove(url, {
+    await del(url, {
       token: process.env.BLOB_READ_WRITE_TOKEN!,
     });
   } catch (error) {
