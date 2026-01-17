@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
-import { uploadFile, deleteFile } from "@/lib/storage";
 
 interface PremadeProduct {
   id: number;
@@ -73,12 +72,28 @@ export default function ProductsManagement() {
       
       // If a new file was selected, upload it first
       if (imageFile) {
-        imageUrl = await uploadFile(imageFile, 'premade');
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', imageFile);
+        uploadFormData.append('folder', 'premade');
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload image');
+        }
+        
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.url;
         
         // If editing and had an old Vercel Blob image, delete it
         if (editingProduct && editingProduct.image && editingProduct.image.includes('vercel-storage')) {
           try {
-            await deleteFile(editingProduct.image);
+            // Delete through API if we create a delete endpoint, or handle cleanup server-side
+            // For now, we'll skip deletion to avoid client-side calls
+            console.log('Old image should be cleaned up:', editingProduct.image);
           } catch (error) {
             console.error('Error deleting old image:', error);
             // Continue anyway - don't fail the whole operation
