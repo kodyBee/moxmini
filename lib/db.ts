@@ -304,3 +304,20 @@ export async function deletePremadeProduct(id: number): Promise<void> {
     throw error;
   }
 }
+
+// Delete a premade product by SKU
+export async function deletePremadeProductBySku(sku: string): Promise<void> {
+  try {
+    const result = await sql`
+      DELETE FROM premade_products WHERE sku = ${sku}
+    `;
+    if (result.rowCount === 0) {
+      console.warn(`No premade product found with SKU: ${sku}`);
+    } else {
+      console.log(`✅ Deleted premade product with SKU: ${sku}`);
+    }
+  } catch (error) {
+    console.error("Error deleting premade product by SKU:", error);
+    throw error;
+  }
+}

@@ -148,6 +148,36 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Remove premade products from listings after purchase
+      try {
+        const { deletePremadeProductBySku } = await import("@/lib/db");
+        
+        // Check each order for premade products (identified by material metadata)
+        for (const item of lineItems.data) {
+          const product = item.price?.product as Stripe.Product;
+          const metadata = product.metadata || {};
+          const sku = metadata.sku;
+          
+          // If this is a premade product (has prepainted material or no custom painting), remove it
+          // Premade products either have material: "prepainted" or no painting options
+          const isPremade = metadata.material === "prepainted" || 
+                           (metadata.hairColor === "N/A" && 
+                            metadata.skinColor === "N/A" && 
+                            metadata.accessoryColor === "N/A" && 
+                            metadata.fabricColor === "N/A" &&
+                            product.name !== "Custom Painting Service");
+          
+          if (isPremade && sku) {
+            console.log(`🗑️ Removing premade product from listings: ${product.name} (SKU: ${sku})`);
+            await deletePremadeProductBySku(sku);
+          }
+        }
+      } catch (deleteError) {
+        const errorMessage = deleteError instanceof Error ? deleteError.message : 'Unknown error';
+        console.error("⚠️ Error removing premade products:", errorMessage);
+        // Don't fail the webhook if product deletion fails, just log it
+      }
+
       // Return success
       return NextResponse.json({ 
         received: true, 

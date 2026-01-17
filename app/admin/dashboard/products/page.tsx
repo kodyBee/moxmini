@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Navigation } from "@/components/ui/navigation";
 import { Separator } from "@/components/ui/separator";
+import { uploadFile, deleteFile } from "@/lib/storage";
 
 interface PremadeProduct {
   id: number;
@@ -31,6 +32,9 @@ export default function ProductsManagement() {
     description: "",
     sku: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -63,13 +67,32 @@ export default function ProductsManagement() {
     e.preventDefault();
     
     try {
+      setIsUploading(true);
+      
+      let imageUrl = formData.image;
+      
+      // If a new file was selected, upload it first
+      if (imageFile) {
+        imageUrl = await uploadFile(imageFile, 'premade');
+        
+        // If editing and had an old Vercel Blob image, delete it
+        if (editingProduct && editingProduct.image && editingProduct.image.includes('vercel-storage')) {
+          try {
+            await deleteFile(editingProduct.image);
+          } catch (error) {
+            console.error('Error deleting old image:', error);
+            // Continue anyway - don't fail the whole operation
+          }
+        }
+      }
+      
       const url = editingProduct
         ? "/api/admin/premade-products"
         : "/api/admin/premade-products";
       
       const body = editingProduct
-        ? { id: editingProduct.id, ...formData }
-        : formData;
+        ? { id: editingProduct.id, ...formData, image: imageUrl }
+        : { ...formData, image: imageUrl };
 
       const response = await fetch(url, {
         method: editingProduct ? "PATCH" : "POST",
@@ -85,6 +108,8 @@ export default function ProductsManagement() {
     } catch (error) {
       console.error("Error saving product:", error);
       alert("Failed to save product. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -98,6 +123,8 @@ export default function ProductsManagement() {
       description: product.description,
       sku: product.sku,
     });
+    setImagePreview(product.image);
+    setImageFile(null);
     setShowForm(true);
   };
 
@@ -129,7 +156,35 @@ export default function ProductsManagement() {
       sku: "",
     });
     setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview("");
     setShowForm(false);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size must be less than 5MB');
+        return;
+      }
+      
+      setImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (status === "loading") {
@@ -230,15 +285,35 @@ export default function ProductsManagement() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Image URL *</label>
-                  <input
-                    type="url"
-                    required
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500"
-                    placeholder="https://example.com/image.jpg or /image.jpg"
-                  />
+                  <label className="block text-sm font-medium mb-2">
+                    Product Image * {editingProduct && '(Upload new image to replace)'}
+                  </label>
+                  
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="mb-3 relative w-full h-48 bg-black/30 rounded-lg overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* File Input */}
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      required={!editingProduct && !imagePreview}
+                      className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-lg focus:outline-none focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Description *</label>
@@ -253,14 +328,16 @@ export default function ProductsManagement() {
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors"
+                    disabled={isUploading}
+                    className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
                   >
-                    {editingProduct ? "Update Product" : "Create Product"}
+                    {isUploading ? 'Uploading...' : editingProduct ? "Update Product" : "Create Product"}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                    disabled={isUploading}
+                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
                   >
                     Cancel
                   </button>

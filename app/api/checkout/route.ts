@@ -14,6 +14,7 @@ interface CartItemProduct {
   sku: string;
   price: string;
   images?: { URL: string }[];
+  material?: string;
 }
 
 interface CartItemInput {
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
         description: `SKU: ${item.product.sku}`,
         metadata: {
           sku: item.product.sku,
+          material: item.product.material || "unpainted",
           hairColor: truncateText(item.paintingOptions.hairColor || "N/A", 100),
           skinColor: truncateText(item.paintingOptions.skinColor || "N/A", 100),
           accessoryColor: truncateText(item.paintingOptions.accessoryColor || "N/A", 100),
