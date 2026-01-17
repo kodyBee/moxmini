@@ -14,7 +14,7 @@ export default function Home() {
         >
           {/* background image, moved it down some with background position */}
           <div 
-            className="absolute inset-0 bg-[url('/Hero%20Background.jpg')] bg-center bg-cover"
+            className="absolute inset-0 bg-[url('/Hero%20Background.jpeg')] bg-center bg-cover"
             style={{
               backgroundPosition: 'center 10%',
             }}
@@ -24,7 +24,7 @@ export default function Home() {
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center mb-12 sm:mb-16 lg:mb-20">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight max-w-6xl">
-              Epic Miniatures for Legendary Adventures duh
+              Epic Miniatures for Legendary Adventures
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-300 mb-12 sm:mb-16 max-w-4xl mx-auto px-3 leading-relaxed tabindex={0}">
