@@ -14,7 +14,7 @@ export default function Home() {
         >
           {/* background image, moved it down some with background position */}
           <div 
-            className="absolute inset-0 bg-[url('/Hero%20Background.jpeg')] bg-center bg-cover"
+            className="absolute inset-0 bg-[url('/background.jpeg')] bg-center bg-cover"
             style={{
               backgroundPosition: 'center 10%',
             }}
