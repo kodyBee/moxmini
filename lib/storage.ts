@@ -17,7 +17,7 @@ export async function uploadFile(
 
   try {
     const blob = await put(pathname, file, {
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
+      token: process.env.BLOB_STORE_WRITE_TOKEN!,
     });
 
     return blob.url;
@@ -34,7 +34,7 @@ export async function uploadFile(
 export async function deleteFile(url: string): Promise<void> {
   try {
     await remove(url, {
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
+      token: process.env.BLOB_STORE_WRITE_TOKEN!,
     });
   } catch (error) {
     console.error('Delete error:', error);
