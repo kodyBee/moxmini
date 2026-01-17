@@ -38,9 +38,7 @@ export async function POST(request: NextRequest) {
     const pathname = folder ? `${folder}/${fileName}` : fileName;
 
     // Upload to Vercel Blob
-    const blob = await put(pathname, file, {
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
-    });
+    const blob = await put(pathname, file);
 
     return NextResponse.json({
       url: blob.url,

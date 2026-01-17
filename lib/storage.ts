@@ -16,9 +16,7 @@ export async function uploadFile(
   const pathname = folder ? `${folder}/${fileName}` : fileName;
 
   try {
-    const blob = await put(pathname, file, {
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
-    });
+    const blob = await put(pathname, file);
 
     return blob.url;
   } catch (error) {
@@ -34,7 +32,7 @@ export async function uploadFile(
 export async function deleteFile(url: string): Promise<void> {
   try {
     await remove(url, {
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
+      token: process.env.BLOB_STORE_WRITE_TOKEN!,
     });
   } catch (error) {
     console.error('Delete error:', error);
