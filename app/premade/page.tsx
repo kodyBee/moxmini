@@ -51,6 +51,13 @@ export default function Page() {
         material: "prepainted",
         description: product.description,
       },
+      paintingOptions: {
+        hairColor: "N/A",
+        skinColor: "N/A",
+        accessoryColor: "N/A",
+        fabricColor: "N/A",
+        specificDetails: "Premade - Already Painted",
+      },
       wantsPainting: false,
       id: `${product.sku}-${Date.now()}`,
     };
