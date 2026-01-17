@@ -37,10 +37,9 @@ export async function POST(request: NextRequest) {
 
     // Convert File to ArrayBuffer for compatibility with @vercel/blob v0.0.2
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Vercel Blob
-    const blob = await put(pathname, buffer, {
+    const blob = await put(pathname, arrayBuffer, {
       token: process.env.BLOB_READ_WRITE_TOKEN!,
       contentType: file.type,
     });
