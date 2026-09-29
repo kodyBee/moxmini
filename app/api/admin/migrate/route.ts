@@ -1,7 +1,11 @@
 import { sql } from "@vercel/postgres";
+import { requireAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     // Add shipping columns if they don't exist
     await sql`

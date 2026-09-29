@@ -1,35 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
 import {
   getOrders,
-  storeOrders as dbStoreOrders,
   updateOrderCompletion,
   deleteOrder as dbDeleteOrder,
-  initDatabase,
-  type OrderItem,
+  ensureDatabase,
 } from "@/lib/db";
 
-// Initialize database on first load
-let dbInitialized = false;
-async function ensureDatabase() {
-  if (!dbInitialized) {
-    await initDatabase();
-    dbInitialized = true;
-  }
-}
-
-// Helper function to store orders (can be called from webhook)
-export async function storeOrders(newOrders: OrderItem[]) {
-  await ensureDatabase();
-  await dbStoreOrders(newOrders);
-  console.log("Orders stored in database, count:", newOrders.length);
-}
-
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     // Check if database is configured
     if (!process.env.POSTGRES_URL) {
       console.warn("POSTGRES_URL not configured, returning empty orders");
-      return NextResponse.json({ 
+      return NextResponse.json({
         orders: [],
         warning: "Database not configured. Please set POSTGRES_URL environment variable."
       });
@@ -40,34 +26,17 @@ export async function GET() {
     return NextResponse.json({ orders });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    return NextResponse.json({ 
-      orders: [],
-      error: error instanceof Error ? error.message : "Database error"
-    });
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const { orders: newOrders } = (await req.json()) as { orders: OrderItem[] };
-
-    if (newOrders && Array.isArray(newOrders)) {
-      await ensureDatabase();
-      await dbStoreOrders(newOrders);
-      return NextResponse.json({ success: true, count: newOrders.length });
-    }
-
-    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-  } catch (error) {
-    console.error("Error storing orders:", error);
     return NextResponse.json(
-      { error: "Failed to store orders" },
+      { orders: [], error: "Database error" },
       { status: 500 }
     );
   }
 }
 
 export async function PATCH(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     await ensureDatabase();
     const { orderId, completed } = (await req.json()) as {
@@ -87,6 +56,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     await ensureDatabase();
     const { searchParams } = new URL(req.url);

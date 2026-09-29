@@ -1,204 +1,132 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import type Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
+import {
+  deletePremadeProductBySku,
+  ensureDatabase,
+  storeOrders,
+  type OrderItem,
+} from "@/lib/db";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set");
+function getShippingAddress(session: Stripe.Checkout.Session): OrderItem["shippingAddress"] {
+  // With shipping_address_collection, the shipping address lives on
+  // collected_information. customer_details.address is the billing address,
+  // used only as a fallback.
+  const shipping = session.collected_information?.shipping_details;
+  const name = shipping?.name ?? session.customer_details?.name ?? "";
+  const address = shipping?.address ?? session.customer_details?.address;
+  if (!address) return undefined;
+
+  return {
+    name,
+    address: {
+      line1: address.line1 || "",
+      line2: address.line2 || undefined,
+      city: address.city || "",
+      state: address.state || "",
+      postal_code: address.postal_code || "",
+      country: address.country || "",
+    },
+  };
 }
 
-if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error("STRIPE_WEBHOOK_SECRET is not set");
+async function fulfillCheckout(sessionId: string) {
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.payment_status === "unpaid") {
+    console.log(`Checkout ${session.id} is not paid yet, waiting for async payment`);
+    return { orderCount: 0 };
+  }
+
+  const shippingAddress = getShippingAddress(session);
+  if (!shippingAddress) {
+    console.warn(`No shipping address found for session ${session.id}`);
+  }
+
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+    expand: ["data.price.product"],
+    limit: 100,
+  });
+
+  const miniatures = lineItems.data
+    .map((item) => ({ item, product: item.price?.product as Stripe.Product }))
+    .filter(({ product }) => product.name !== "Custom Painting Service");
+
+  const orders: OrderItem[] = miniatures.map(({ item, product }) => {
+    const metadata = product.metadata || {};
+    return {
+      id: `${session.id}-${item.id}`,
+      orderId: session.id,
+      customerEmail: session.customer_details?.email || "No email",
+      productName: product.name || item.description || "Unknown Product",
+      sku: metadata.sku || "N/A",
+      paintingOptions: {
+        hairColor: metadata.hairColor || "N/A",
+        skinColor: metadata.skinColor || "N/A",
+        accessoryColor: metadata.accessoryColor || "N/A",
+        fabricColor: metadata.fabricColor || "N/A",
+        specificDetails: metadata.specificDetails || "None",
+      },
+      shippingAddress,
+      timestamp: Date.now(),
+      completed: false,
+      price: ((item.amount_total || 0) / 100).toFixed(2),
+    };
+  });
+
+  await ensureDatabase();
+  await storeOrders(orders);
+  console.log(`Stored ${orders.length} order item(s) for checkout ${session.id}`);
+
+  // Prepainted pieces are one-of-a-kind: take them off the shelf once sold
+  for (const { product } of miniatures) {
+    const sku = product.metadata?.sku;
+    if (product.metadata?.material === "prepainted" && sku) {
+      try {
+        await deletePremadeProductBySku(sku);
+      } catch (error) {
+        console.error(`Failed to remove sold premade product ${sku}:`, error);
+      }
+    }
+  }
+
+  return { orderCount: orders.length };
 }
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-10-29.clover",
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not set");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    return NextResponse.json({ error: "No signature provided" }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
   try {
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
+    event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
 
-    if (!signature) {
-      console.error("Webhook error: No signature provided");
-      return NextResponse.json(
-        { error: "No signature provided" },
-        { status: 400 }
-      );
-    }
-
-    // Verify webhook signature
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-      console.log(`✅ Webhook verified: ${event.type}`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error("❌ Webhook signature verification failed:", errorMessage);
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 400 }
-      );
-    }
-
-    // Handle the checkout.session.completed event
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log(`Processing checkout session: ${session.id}`);
-
-      // Retrieve the full session
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
-      
-      console.log(`📋 Customer details:`, JSON.stringify(fullSession.customer_details, null, 2));
-      
-      // Extract shipping address from customer_details (where Stripe stores it with shipping_address_collection)
-      const shippingFromCustomer = fullSession.customer_details?.address;
-      const shippingName = fullSession.customer_details?.name;
-      
-      console.log(`📍 Shipping address in customer_details:`, !!shippingFromCustomer);
-      
-      // Build shipping details object from customer_details
-      const shippingDetails = shippingFromCustomer ? {
-        name: shippingName || "",
-        address: {
-          line1: shippingFromCustomer.line1 || "",
-          line2: shippingFromCustomer.line2 || undefined,
-          city: shippingFromCustomer.city || "",
-          state: shippingFromCustomer.state || "",
-          postal_code: shippingFromCustomer.postal_code || "",
-          country: shippingFromCustomer.country || "",
-        }
-      } : null;
-      
-      if (shippingDetails) {
-        console.log(`📦 Shipping to: ${shippingDetails.name} at ${shippingDetails.address.line1}, ${shippingDetails.address.city}, ${shippingDetails.address.state}`);
-      } else {
-        console.log(`⚠️ No shipping address found for session ${session.id}`);
-      }
-
-      // Get line items with expanded product data
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-        expand: ["data.price.product"],
-      });
-      const shippingAddress = shippingDetails ? {
-        name: shippingDetails.name || "",
-        address: {
-          line1: shippingDetails.address?.line1 || "",
-          line2: shippingDetails.address?.line2 || undefined,
-          city: shippingDetails.address?.city || "",
-          state: shippingDetails.address?.state || "",
-          postal_code: shippingDetails.address?.postal_code || "",
-          country: shippingDetails.address?.country || "",
-        },
-      } : undefined;
-
-      // Extract order details - filter out painting service items
-      const orders = lineItems.data
-        .filter((item) => {
-          const product = item.price?.product as Stripe.Product;
-          return product.name !== "Custom Painting Service";
-        })
-        .map((item) => {
-          const product = item.price?.product as Stripe.Product;
-          const metadata = product.metadata || {};
-
-          return {
-            id: `${session.id}-${item.id}`,
-            orderId: session.id,
-            customerEmail: session.customer_details?.email || "No email",
-            productName: product.name || item.description || "Unknown Product",
-            sku: metadata.sku || "N/A",
-            paintingOptions: {
-              hairColor: metadata.hairColor || "N/A",
-              skinColor: metadata.skinColor || "N/A",
-              accessoryColor: metadata.accessoryColor || "N/A",
-              fabricColor: metadata.fabricColor || "N/A",
-              specificDetails: metadata.specificDetails || "None",
-            },
-            shippingAddress,
-            timestamp: Date.now(),
-            completed: false,
-            price: ((item.amount_total || 0) / 100).toFixed(2),
-          };
-        });
-
-      // Log the orders
-      console.log(`📦 New orders received from webhook (${orders.length} items):`, 
-        JSON.stringify(orders.map(o => ({ 
-          id: o.id, 
-          product: o.productName, 
-          email: o.customerEmail 
-        })), null, 2)
-      );
-
-      // Store orders in database
-      try {
-        const { storeOrders } = await import("@/app/api/admin/orders/route");
-        await storeOrders(orders);
-        console.log(`✅ Successfully stored ${orders.length} orders in database`);
-      } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown error';
-        console.error("❌ Database error storing orders:", errorMessage);
-        // Still return 200 to Stripe to prevent retries, but log the error
-        return NextResponse.json({ 
-          received: true, 
-          warning: "Order received but database storage failed",
-          error: errorMessage
-        });
-      }
-
-      // Remove premade products from listings after purchase
-      try {
-        const { deletePremadeProductBySku } = await import("@/lib/db");
-        
-        // Check each order for premade products (identified by material metadata)
-        for (const item of lineItems.data) {
-          const product = item.price?.product as Stripe.Product;
-          const metadata = product.metadata || {};
-          const sku = metadata.sku;
-          
-          // If this is a premade product (has prepainted material or no custom painting), remove it
-          // Premade products either have material: "prepainted" or no painting options
-          const isPremade = metadata.material === "prepainted" || 
-                           (metadata.hairColor === "N/A" && 
-                            metadata.skinColor === "N/A" && 
-                            metadata.accessoryColor === "N/A" && 
-                            metadata.fabricColor === "N/A" &&
-                            product.name !== "Custom Painting Service");
-          
-          if (isPremade && sku) {
-            console.log(`🗑️ Removing premade product from listings: ${product.name} (SKU: ${sku})`);
-            await deletePremadeProductBySku(sku);
-          }
-        }
-      } catch (deleteError) {
-        const errorMessage = deleteError instanceof Error ? deleteError.message : 'Unknown error';
-        console.error("⚠️ Error removing premade products:", errorMessage);
-        // Don't fail the webhook if product deletion fails, just log it
-      }
-
-      // Return success
-      return NextResponse.json({ 
-        received: true, 
-        orderCount: orders.length,
-        message: "Webhook processed successfully" 
-      });
-    }
-
-    // Return success for other event types
-    console.log(`ℹ️ Received ${event.type} event (not processed)`);
+  if (
+    event.type !== "checkout.session.completed" &&
+    event.type !== "checkout.session.async_payment_succeeded"
+  ) {
     return NextResponse.json({ received: true, type: event.type });
+  }
+
+  try {
+    const { orderCount } = await fulfillCheckout(event.data.object.id);
+    return NextResponse.json({ received: true, orderCount });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error("❌ Webhook handler error:", errorMessage);
-    if (errorStack) {
-      console.error("Stack trace:", errorStack);
-    }
-    return NextResponse.json(
-      { error: "Webhook handler failed", details: errorMessage },
-      { status: 500 }
-    );
+    // A 500 makes Stripe retry later; storing orders is idempotent
+    console.error("Webhook handler error:", error);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }

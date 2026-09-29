@@ -29,6 +29,16 @@ export interface OrderItem {
   price: string;
 }
 
+// Create tables once per server instance before the first query that needs them
+let databaseReady: Promise<void> | null = null;
+export function ensureDatabase() {
+  databaseReady ??= initDatabase().catch((error) => {
+    databaseReady = null;
+    throw error;
+  });
+  return databaseReady;
+}
+
 // Initialize database table
 export async function initDatabase() {
   // Check if database URL is configured

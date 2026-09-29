@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireAdmin } from "@/lib/auth";
 import {
   getPremadeProducts,
   createPremadeProduct,
@@ -10,12 +9,10 @@ import {
 
 // GET - Fetch all premade products
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const products = await getPremadeProducts();
     return NextResponse.json({ products });
@@ -30,12 +27,10 @@ export async function GET() {
 
 // POST - Create a new premade product
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = await request.json();
     const { name, price, originalPrice, image, description, sku } = body;
@@ -69,12 +64,10 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Update an existing premade product
 export async function PATCH(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = await request.json();
     const { id, ...updates } = body;
@@ -108,12 +101,10 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - Delete a premade product
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

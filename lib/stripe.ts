@@ -1,14 +1,17 @@
-import { loadStripe, Stripe } from "@stripe/stripe-js";
+import "server-only";
+import Stripe from "stripe";
 
-let stripePromise: Promise<Stripe | null>;
+let stripe: Stripe | null = null;
 
-export const getStripe = () => {
-  if (!stripePromise) {
-    const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+export function getStripe() {
+  if (!stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
     if (!key) {
-      throw new Error("Missing Stripe publishable key");
+      throw new Error("STRIPE_SECRET_KEY is not set");
     }
-    stripePromise = loadStripe(key);
+    stripe = new Stripe(key, {
+      apiVersion: "2025-10-29.clover",
+    });
   }
-  return stripePromise;
-};
+  return stripe;
+}
