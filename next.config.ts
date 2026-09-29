@@ -1,19 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactCompiler: true,
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**.reapermini.com',
+        protocol: "https",
+        hostname: "**.reapermini.com",
       },
       {
-        protocol: 'https',
-        hostname: 'www.reapermini.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.reapermini.com',
+        protocol: "https",
+        hostname: "**.public.blob.vercel-storage.com",
       },
     ],
   },

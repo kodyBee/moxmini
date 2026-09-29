@@ -1,5 +1,5 @@
 import "server-only";
-import { getPremadeProducts, type PremadeProduct } from "@/lib/db";
+import { getPremadeProducts, isDatabaseConfigured, type PremadeProduct } from "@/lib/db";
 
 // Shown only in local development when no database is configured
 const DEMO_PRODUCTS: PremadeProduct[] = [
@@ -19,7 +19,7 @@ const DEMO_PRODUCTS: PremadeProduct[] = [
  * is removed by the Stripe webhook once it sells.
  */
 export async function listPremadeProducts(): Promise<PremadeProduct[]> {
-  if (!process.env.POSTGRES_URL) {
+  if (!isDatabaseConfigured()) {
     return DEMO_PRODUCTS;
   }
   return getPremadeProducts();

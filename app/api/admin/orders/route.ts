@@ -5,6 +5,7 @@ import {
   updateOrderCompletion,
   deleteOrder as dbDeleteOrder,
   ensureDatabase,
+  isDatabaseConfigured,
 } from "@/lib/db";
 
 export async function GET() {
@@ -13,7 +14,7 @@ export async function GET() {
 
   try {
     // Check if database is configured
-    if (!process.env.POSTGRES_URL) {
+    if (!isDatabaseConfigured()) {
       console.warn("POSTGRES_URL not configured, returning empty orders");
       return NextResponse.json({
         orders: [],
