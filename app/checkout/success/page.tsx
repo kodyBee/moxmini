@@ -1,132 +1,61 @@
-"use client";
-
-import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Navigation } from "@/components/ui/navigation";
-import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Ornament } from "@/components/ornament";
+import { ClearCartOnce } from "./clear-cart-once";
 
-function CheckoutSuccessContent() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
-  const [cartCleared, setCartCleared] = React.useState(false);
+export const metadata: Metadata = {
+  title: "Order Confirmed",
+  robots: { index: false },
+};
 
-  // Clear cart immediately on mount - run once
-  React.useEffect(() => {
-    if (sessionId && !cartCleared) {
-      // Check if this session has already been processed
-      const processedSessions = JSON.parse(localStorage.getItem("processedSessions") || "[]");
-      
-      if (!processedSessions.includes(sessionId)) {
-        // Clear the cart
-        localStorage.removeItem("cart");
-        
-        // Set flag for other pages to know we just completed checkout
-        sessionStorage.setItem("checkoutSuccess", "true");
-        
-        // Mark session as processed
-        processedSessions.push(sessionId);
-        localStorage.setItem("processedSessions", JSON.stringify(processedSessions));
-        
-        // Force update navigation cart count
-        window.dispatchEvent(new Event("cartUpdated"));
-        window.dispatchEvent(new StorageEvent("storage", {
-          key: "cart",
-          oldValue: localStorage.getItem("cart"),
-          newValue: null,
-          url: window.location.href,
-          storageArea: localStorage
-        }));
-        
-        setCartCleared(true);
-      } else {
-        setCartCleared(true);
-      }
-    }
-  }, [sessionId, cartCleared]);
+export default async function CheckoutSuccessPage({
+  searchParams,
+}: PageProps<"/checkout/success">) {
+  const { session_id } = await searchParams;
+  const sessionId = typeof session_id === "string" ? session_id : null;
 
   return (
-    <>
-      <Navigation currentPage="cart" />
-      
-      <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black text-white py-20 px-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <Separator className="mb-8 bg-white/20" />
-          
-          {/* Success Icon */}
-          <div className="mb-8 flex justify-center">
-            <div className="bg-green-500/20 rounded-full p-4 sm:p-6">
-              <svg
-                className="w-16 h-16 sm:w-24 sm:h-24 text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          </div>
+    <div className="container-page pt-16 md:pt-24">
+      {sessionId && <ClearCartOnce sessionId={sessionId} />}
+      <div className="mx-auto max-w-2xl text-center">
+        <span className="mx-auto grid size-20 place-items-center rounded-full border border-success/40 bg-success/10 text-success">
+          <Check className="size-9" aria-hidden />
+        </span>
+        <p className="eyebrow mt-8">Payment successful</p>
+        <h1 className="mt-3 font-display text-5xl font-semibold tracking-tight sm:text-6xl">
+          Thank you for your order!
+        </h1>
+        <p className="mt-5 text-lg text-muted-foreground">
+          Your order is confirmed and on its way to Mox&apos;s workbench.
+          You&apos;ll receive an email confirmation shortly with your order
+          details.
+        </p>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            Payment Successful!
-          </h1>
-          
-          <p className="text-lg sm:text-xl text-gray-300 mb-6">
-            Thank you for your order!
+        {sessionId && (
+          <p className="surface mt-8 px-5 py-4 text-sm text-muted-foreground">
+            Order reference
+            <span className="mt-1 block font-mono text-xs break-all text-foreground/80">
+              {sessionId}
+            </span>
           </p>
+        )}
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 mb-8">
-            <p className="text-sm sm:text-base text-gray-300 mb-2">
-              Your order has been confirmed and is being processed.
-            </p>
-            <p className="text-xs sm:text-sm text-gray-400">
-              You will receive an email confirmation shortly with your order details.
-            </p>
-            {sessionId && (
-              <p className="text-gray-500 text-xs mt-4">
-                Order ID: {sessionId}
-              </p>
-            )}
-          </div>
+        <Ornament className="mx-auto mt-10 max-w-xs" />
 
-          <Separator className="mb-8 bg-white/20" />
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/figurefinder"
-              className="cursor-pointer px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors"
-            >
-              Continue Shopping
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <Button asChild>
+            <Link href="/figurefinder">
+              Continue shopping
+              <ArrowRight aria-hidden />
             </Link>
-            <Link
-              href="/"
-              className="cursor-pointer px-8 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors border border-white/20"
-            >
-              Return Home
-            </Link>
-          </div>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/">Return home</Link>
+          </Button>
         </div>
-      </main>
-    </>
-  );
-}
-
-export default function CheckoutSuccessPage() {
-  return (
-    <Suspense fallback={
-      <>
-        <Navigation currentPage="cart" />
-        <main className="min-h-screen bg-gradient-to-r from-black via-[#001220] to-black text-white flex items-center justify-center">
-          <div className="text-xl">Loading...</div>
-        </main>
-      </>
-    }>
-      <CheckoutSuccessContent />
-    </Suspense>
+      </div>
+    </div>
   );
 }

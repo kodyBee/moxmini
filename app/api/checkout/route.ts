@@ -1,148 +1,223 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import type Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
+import { getCatalog } from "@/lib/catalog";
+import { listPremadeProducts } from "@/lib/premade";
+import { PAINTING_FEE } from "@/lib/pricing";
 
-interface PaintingOptions {
-  hairColor?: string;
-  skinColor?: string;
-  accessoryColor?: string;
-  fabricColor?: string;
-  specificDetails?: string;
-}
+const MAX_CART_ITEMS = 50;
 
-interface CartItemProduct {
-  name: string;
+// What the browser tells us about each cart item. Names and prices sent by the
+// browser are ignored: everything billable is looked up on the server.
+interface CheckoutItem {
   sku: string;
-  price: string;
-  images?: { URL: string }[];
-  material?: string;
+  name: string;
+  premade: boolean;
+  wantsPainting: boolean;
+  colors: Record<
+    "hairColor" | "skinColor" | "accessoryColor" | "fabricColor",
+    string
+  >;
+  specificDetails: string;
 }
 
-interface CartItemInput {
-  product: CartItemProduct;
-  paintingOptions: PaintingOptions;
-  wantsPainting?: boolean;
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+function truncate(text: string, maxLength: number) {
+  return text.length > maxLength ? text.slice(0, maxLength - 3) + "..." : text;
 }
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set");
+function parseCartItem(raw: unknown): CheckoutItem | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const { product, paintingOptions, wantsPainting } = raw as {
+    product?: { sku?: unknown; name?: unknown; material?: unknown };
+    paintingOptions?: Record<string, unknown>;
+    wantsPainting?: unknown;
+  };
+  if (typeof product?.sku !== "string" || product.sku === "") return null;
+
+  const premade = product.material === "prepainted";
+  const painted = !premade && wantsPainting !== false;
+  const color = (value: unknown) =>
+    painted && typeof value === "string" && HEX_COLOR.test(value)
+      ? value
+      : "N/A";
+  const details = paintingOptions?.specificDetails;
+
+  return {
+    sku: product.sku,
+    name: typeof product.name === "string" ? product.name : product.sku,
+    premade,
+    wantsPainting: painted,
+    colors: {
+      hairColor: color(paintingOptions?.hairColor),
+      skinColor: color(paintingOptions?.skinColor),
+      accessoryColor: color(paintingOptions?.accessoryColor),
+      fabricColor: color(paintingOptions?.fabricColor),
+    },
+    specificDetails:
+      painted && typeof details === "string" && details.trim() !== ""
+        ? truncate(details.trim(), 490)
+        : "None",
+  };
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-10-29.clover",
-});
+function httpsImage(image: string | null | undefined, origin: string) {
+  if (!image) return undefined;
+  try {
+    const url = new URL(image, origin);
+    // Stripe only accepts publicly reachable HTTPS images
+    return url.protocol === "https:" ? [url.toString()] : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function unavailable(message: string) {
+  return NextResponse.json({ error: message }, { status: 409 });
+}
 
 export async function POST(req: NextRequest) {
+  let cartItems: unknown;
   try {
-    const { cartItems } = await req.json();
+    ({ cartItems } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 
-    if (!cartItems || cartItems.length === 0) {
-      return NextResponse.json(
-        { error: "Cart is empty" },
-        { status: 400 }
-      );
-    }
+  if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    return NextResponse.json({ error: "Your cart is empty" }, { status: 400 });
+  }
+  if (cartItems.length > MAX_CART_ITEMS) {
+    return NextResponse.json(
+      { error: `Checkout is limited to ${MAX_CART_ITEMS} items per order` },
+      { status: 400 }
+    );
+  }
 
-    // Create line items for Stripe
-    const lineItems = cartItems.map((item: CartItemInput) => {
-      const price = parseFloat(item.product.price || "0");
-      const priceInCents = Math.round(price * 100);
+  const items = cartItems.map(parseCartItem);
+  if (items.some((item) => item === null)) {
+    return NextResponse.json(
+      { error: "Your cart contains an invalid item" },
+      { status: 400 }
+    );
+  }
 
-      //shorten shit to specific details to fit Stripe's 500 character limit per metadata value
-      const truncateText = (text: string, maxLength: number = 500) => {
-        if (!text) return "";
-        return text.length > maxLength ? text.substring(0, maxLength - 3) + "..." : text;
-      };
+  try {
+    const origin = req.nextUrl.origin;
+    const hasPremade = items.some((item) => item!.premade);
+    const hasCustom = items.some((item) => !item!.premade);
+    const [premadeProducts, catalog] = await Promise.all([
+      hasPremade ? listPremadeProducts() : [],
+      hasCustom ? getCatalog() : [],
+    ]);
 
-      // Get image URL - only include if it's a valid external HTTPS URL
-      let imageUrl: string | undefined = undefined;
-      const rawImageUrl = item.product.images?.[0]?.URL;
-      
-      if (rawImageUrl) {
-        // Only include if it's already an absolute HTTPS URL (not relative paths)
-        // Stripe requires publicly accessible HTTPS URLs
-        if (rawImageUrl.startsWith('https://')) {
-          imageUrl = rawImageUrl;
-          console.log('Using image URL:', imageUrl);
-        } else {
-          console.log('Skipping non-HTTPS image URL:', rawImageUrl);
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    const premadeInCart = new Set<string>();
+    let paintedCount = 0;
+
+    for (const item of items as CheckoutItem[]) {
+      if (item.premade) {
+        const product = premadeProducts.find((p) => p.sku === item.sku);
+        if (!product) {
+          return unavailable(
+            `"${item.name}" has already sold. Remove it from your cart to continue.`
+          );
         }
+        if (premadeInCart.has(product.sku)) {
+          return unavailable(
+            `"${product.name}" is one-of-a-kind. Remove the extra copy from your cart to continue.`
+          );
+        }
+        premadeInCart.add(product.sku);
+
+        lineItems.push({
+          price_data: {
+            currency: "usd",
+            unit_amount: Math.round(product.price * 100),
+            product_data: {
+              name: product.name,
+              description: `SKU: ${product.sku}`,
+              images: httpsImage(product.image, origin),
+              metadata: {
+                sku: product.sku,
+                material: "prepainted",
+                wantsPainting: "false",
+                hairColor: "N/A",
+                skinColor: "N/A",
+                accessoryColor: "N/A",
+                fabricColor: "N/A",
+                specificDetails: "Premade - Already Painted",
+              },
+            },
+          },
+          quantity: 1,
+        });
+        continue;
       }
 
-      const productData: {
-        name: string;
-        description: string;
-        images?: string[];
-        metadata: Record<string, string>;
-      } = {
-        name: item.product.name,
-        description: `SKU: ${item.product.sku}`,
-        metadata: {
-          sku: item.product.sku,
-          material: item.product.material || "unpainted",
-          hairColor: truncateText(item.paintingOptions.hairColor || "N/A", 100),
-          skinColor: truncateText(item.paintingOptions.skinColor || "N/A", 100),
-          accessoryColor: truncateText(item.paintingOptions.accessoryColor || "N/A", 100),
-          fabricColor: truncateText(item.paintingOptions.fabricColor || "N/A", 100),
-          specificDetails: truncateText(item.paintingOptions.specificDetails || "None", 490),
-        },
-      };
-
-      // Only add images array if we have a valid URL
-      if (imageUrl) {
-        productData.images = [imageUrl];
+      const product = catalog.find((p) => p.sku === item.sku);
+      if (!product || product.price === null) {
+        return unavailable(
+          `"${item.name}" is no longer available. Remove it from your cart to continue.`
+        );
       }
 
-      return {
+      if (item.wantsPainting) paintedCount++;
+      lineItems.push({
         price_data: {
           currency: "usd",
-          product_data: productData,
-          unit_amount: priceInCents,
+          unit_amount: Math.round(product.price * 100),
+          product_data: {
+            name: product.name,
+            description: `SKU: ${product.sku}`,
+            images: httpsImage(product.image, origin),
+            metadata: {
+              sku: product.sku,
+              material: product.material,
+              wantsPainting: String(item.wantsPainting),
+              ...item.colors,
+              specificDetails: item.specificDetails,
+            },
+          },
         },
         quantity: 1,
-      };
-    });
+      });
+    }
 
-    // Add $25 custom painting service charge only for items that want painting
-    const paintingServiceItems = cartItems
-      .filter((item: CartItemInput) => item.wantsPainting !== false) // Default to true if not specified
-      .map(() => ({
+    if (paintedCount > 0) {
+      lineItems.push({
         price_data: {
           currency: "usd",
+          unit_amount: PAINTING_FEE * 100,
           product_data: {
             name: "Custom Painting Service",
             description: "Professional custom painting for your miniature",
           },
-          unit_amount: 2500, // $25.00
         },
-        quantity: 1,
-      }));
+        quantity: paintedCount,
+      });
+    }
 
-    // Combine miniature products and painting services
-    const allLineItems = [...lineItems, ...paintingServiceItems];
-
-    // Create Checkout Session with shipping address collection
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: allLineItems,
+      line_items: lineItems,
       mode: "payment",
       shipping_address_collection: {
-        allowed_countries: ["US", "CA"], // Add more countries as needed
+        allowed_countries: ["US", "CA"],
       },
-      success_url: `${req.headers.get("origin")}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/cart`,
+      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/cart`,
       metadata: {
-        itemCount: cartItems.length.toString(),
-        // Store order details in a way that respects Stripe's 500 char limit per metadata value
-        // For detailed order info, you would typically store this in your own database
+        itemCount: items.length.toString(),
       },
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error) {
     console.error("Stripe checkout error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to create checkout session";
     return NextResponse.json(
-      { error: errorMessage },
+      { error: "We couldn't start checkout. Please try again in a moment." },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireAdmin } from "@/lib/auth";
+import { revalidatePremadePages } from "@/lib/premade";
 import {
   getPremadeProducts,
   createPremadeProduct,
@@ -10,13 +10,10 @@ import {
 
 // GET - Fetch all premade products
 export async function GET() {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
+  try {
     const products = await getPremadeProducts();
     return NextResponse.json({ products });
   } catch (error) {
@@ -30,13 +27,10 @@ export async function GET() {
 
 // POST - Create a new premade product
 export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
+  try {
     const body = await request.json();
     const { name, price, originalPrice, image, description, sku } = body;
 
@@ -57,6 +51,7 @@ export async function POST(request: NextRequest) {
       sku,
     });
 
+    revalidatePremadePages();
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     console.error("Error creating premade product:", error);
@@ -69,13 +64,10 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Update an existing premade product
 export async function PATCH(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
+  try {
     const body = await request.json();
     const { id, ...updates } = body;
 
@@ -95,6 +87,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     await updatePremadeProduct(parseInt(id), updates);
+    revalidatePremadePages();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -108,13 +101,10 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - Delete a premade product
 export async function DELETE(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
+  try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -126,6 +116,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deletePremadeProduct(parseInt(id));
+    revalidatePremadePages();
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,23 +1,19 @@
-import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
+import { initDatabase } from "@/lib/db";
 
+// Adds any columns an older database is missing (safe to run repeatedly)
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
-    // Add shipping columns if they don't exist
-    await sql`
-      ALTER TABLE orders 
-      ADD COLUMN IF NOT EXISTS shipping_name TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_line1 TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_line2 TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_city TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_state TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_postal_code TEXT,
-      ADD COLUMN IF NOT EXISTS shipping_country TEXT
-    `;
+    await initDatabase();
 
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully! Shipping columns added.",
+      message:
+        "Database migration completed successfully! Shipping columns added.",
     });
   } catch (error) {
     console.error("Migration error:", error);

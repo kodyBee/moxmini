@@ -1,25 +1,32 @@
+import { PageIntro } from "@/components/page-intro";
+
 export default function Loading() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(85deg, #000000 10%, #001220 40%)',
-        color: 'white',
-      }}
-    >
-      <div className="text-center">
-        <div
-          className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-          role="status"
-        >
-          <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-            Loading...
-          </span>
+    <div className="container-page pt-14 md:pt-20" aria-busy>
+      <PageIntro eyebrow="Custom orders" title="Figure Finder">
+        Find your perfect miniature, then choose exactly how Mox should paint
+        it.
+      </PageIntro>
+      <p className="sr-only" role="status">
+        Loading miniatures…
+      </p>
+      <div className="mt-12 grid gap-8 lg:grid-cols-[17rem_1fr] xl:gap-10">
+        <div className="surface h-14 animate-pulse lg:h-[34rem]" />
+        <div>
+          <div className="h-10 w-64 animate-pulse rounded-full bg-muted" />
+          <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 2xl:grid-cols-4">
+            {Array.from({ length: 12 }, (_, i) => (
+              <li key={i} className="surface overflow-hidden">
+                <div className="aspect-square animate-pulse bg-muted" />
+                <div className="space-y-2.5 p-4">
+                  <div className="h-4 w-4/5 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-5 w-1/4 animate-pulse rounded bg-muted pt-4" />
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className="mt-4 text-xl text-gray-400">Loading Figure Finder...</p>
       </div>
     </div>
   );

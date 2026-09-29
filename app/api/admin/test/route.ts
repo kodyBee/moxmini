@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
 import { getOrders } from "@/lib/db";
 
 // Test endpoint to check database connection and orders
 // Visit: https://your-app.vercel.app/api/admin/test
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     console.log("Testing database connection...");
     
