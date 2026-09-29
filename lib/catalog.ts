@@ -9,7 +9,8 @@ import "server-only";
  */
 
 const REAPER_PRODUCTS_URL =
-  process.env.REAPER_PRODUCTS_URL ?? "https://www.reapermini.com/api/productlist";
+  process.env.REAPER_PRODUCTS_URL ??
+  "https://www.reapermini.com/api/productlist";
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 export interface CatalogProduct {
@@ -37,7 +38,10 @@ interface ReaperProduct {
 
 const MINIATURE_MATERIALS = new Set(["metal", "plastic"]);
 
-function toCatalogProduct(raw: ReaperProduct, rank: number): CatalogProduct | null {
+function toCatalogProduct(
+  raw: ReaperProduct,
+  rank: number
+): CatalogProduct | null {
   const material = String(raw.material ?? "").toLowerCase();
   // Only figures: skip paints, books, accessories, etc.
   if (!MINIATURE_MATERIALS.has(material)) return null;
@@ -46,7 +50,8 @@ function toCatalogProduct(raw: ReaperProduct, rank: number): CatalogProduct | nu
   const price = Number.parseFloat(String(raw.price ?? ""));
   const images = Array.isArray(raw.images) ? raw.images : [];
   const image = images.find(
-    (img): img is { URL: string } => typeof img?.URL === "string" && img.URL !== ""
+    (img): img is { URL: string } =>
+      typeof img?.URL === "string" && img.URL !== ""
   );
 
   return {
@@ -54,7 +59,9 @@ function toCatalogProduct(raw: ReaperProduct, rank: number): CatalogProduct | nu
     name: String(raw.name),
     material,
     tags: Array.isArray(raw.tags)
-      ? raw.tags.filter((t): t is string => typeof t === "string").map((t) => t.toLowerCase())
+      ? raw.tags
+          .filter((t): t is string => typeof t === "string")
+          .map((t) => t.toLowerCase())
       : [],
     price: Number.isFinite(price) && price > 0 ? price : null,
     image: image?.URL ?? null,
@@ -102,7 +109,10 @@ export async function getCatalog(): Promise<CatalogProduct[]> {
     return await inflight;
   } catch (error) {
     if (cached) {
-      console.error("Reaper catalog refresh failed, serving stale copy:", error);
+      console.error(
+        "Reaper catalog refresh failed, serving stale copy:",
+        error
+      );
       return cached.products;
     }
     throw error;

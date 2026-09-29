@@ -3,6 +3,7 @@ import { getServerSession, type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -81,4 +82,12 @@ export async function isAdmin() {
 export async function requireAdmin() {
   if (await isAdmin()) return null;
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+/**
+ * For admin pages: sends signed-out visitors to the login page. Call it in each
+ * page that reads admin data, since layouts aren't re-checked on navigation.
+ */
+export async function requireAdminPage() {
+  if (!(await isAdmin())) redirect("/admin/login");
 }

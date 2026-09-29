@@ -7,8 +7,11 @@ import {
   storeOrders,
   type OrderItem,
 } from "@/lib/db";
+import { revalidatePremadePages } from "@/lib/premade";
 
-function getShippingAddress(session: Stripe.Checkout.Session): OrderItem["shippingAddress"] {
+function getShippingAddress(
+  session: Stripe.Checkout.Session
+): OrderItem["shippingAddress"] {
   // With shipping_address_collection, the shipping address lives on
   // collected_information. customer_details.address is the billing address,
   // used only as a fallback.
@@ -34,7 +37,9 @@ async function fulfillCheckout(sessionId: string) {
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   if (session.payment_status === "unpaid") {
-    console.log(`Checkout ${session.id} is not paid yet, waiting for async payment`);
+    console.log(
+      `Checkout ${session.id} is not paid yet, waiting for async payment`
+    );
     return { orderCount: 0 };
   }
 
@@ -76,19 +81,23 @@ async function fulfillCheckout(sessionId: string) {
 
   await ensureDatabase();
   await storeOrders(orders);
-  console.log(`Stored ${orders.length} order item(s) for checkout ${session.id}`);
+  console.log(
+    `Stored ${orders.length} order item(s) for checkout ${session.id}`
+  );
 
   // Prepainted pieces are one-of-a-kind: take them off the shelf once sold
+  let soldPremade = false;
   for (const { product } of miniatures) {
     const sku = product.metadata?.sku;
     if (product.metadata?.material === "prepainted" && sku) {
       try {
-        await deletePremadeProductBySku(sku);
+        soldPremade = (await deletePremadeProductBySku(sku)) || soldPremade;
       } catch (error) {
         console.error(`Failed to remove sold premade product ${sku}:`, error);
       }
     }
   }
+  if (soldPremade) revalidatePremadePages();
 
   return { orderCount: orders.length };
 }
@@ -97,12 +106,18 @@ export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET is not set");
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 500 }
+    );
   }
 
   const signature = req.headers.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json({ error: "No signature provided" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No signature provided" },
+      { status: 400 }
+    );
   }
 
   let event: Stripe.Event;
@@ -127,6 +142,9 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     // A 500 makes Stripe retry later; storing orders is idempotent
     console.error("Webhook handler error:", error);
-    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Webhook handler failed" },
+      { status: 500 }
+    );
   }
 }

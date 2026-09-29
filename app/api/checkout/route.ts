@@ -14,7 +14,10 @@ interface CheckoutItem {
   name: string;
   premade: boolean;
   wantsPainting: boolean;
-  colors: Record<"hairColor" | "skinColor" | "accessoryColor" | "fabricColor", string>;
+  colors: Record<
+    "hairColor" | "skinColor" | "accessoryColor" | "fabricColor",
+    string
+  >;
   specificDetails: string;
 }
 
@@ -36,7 +39,9 @@ function parseCartItem(raw: unknown): CheckoutItem | null {
   const premade = product.material === "prepainted";
   const painted = !premade && wantsPainting !== false;
   const color = (value: unknown) =>
-    painted && typeof value === "string" && HEX_COLOR.test(value) ? value : "N/A";
+    painted && typeof value === "string" && HEX_COLOR.test(value)
+      ? value
+      : "N/A";
   const details = paintingOptions?.specificDetails;
 
   return {
@@ -92,7 +97,10 @@ export async function POST(req: NextRequest) {
 
   const items = cartItems.map(parseCartItem);
   if (items.some((item) => item === null)) {
-    return NextResponse.json({ error: "Your cart contains an invalid item" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Your cart contains an invalid item" },
+      { status: 400 }
+    );
   }
 
   try {

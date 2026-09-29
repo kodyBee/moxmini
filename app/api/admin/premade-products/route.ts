@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { revalidatePremadePages } from "@/lib/premade";
 import {
   getPremadeProducts,
   createPremadeProduct,
@@ -13,7 +14,6 @@ export async function GET() {
   if (denied) return denied;
 
   try {
-
     const products = await getPremadeProducts();
     return NextResponse.json({ products });
   } catch (error) {
@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
 
   try {
-
     const body = await request.json();
     const { name, price, originalPrice, image, description, sku } = body;
 
@@ -52,6 +51,7 @@ export async function POST(request: NextRequest) {
       sku,
     });
 
+    revalidatePremadePages();
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     console.error("Error creating premade product:", error);
@@ -68,7 +68,6 @@ export async function PATCH(request: NextRequest) {
   if (denied) return denied;
 
   try {
-
     const body = await request.json();
     const { id, ...updates } = body;
 
@@ -88,6 +87,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     await updatePremadeProduct(parseInt(id), updates);
+    revalidatePremadePages();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -105,7 +105,6 @@ export async function DELETE(request: NextRequest) {
   if (denied) return denied;
 
   try {
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -117,6 +116,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deletePremadeProduct(parseInt(id));
+    revalidatePremadePages();
 
     return NextResponse.json({ success: true });
   } catch (error) {

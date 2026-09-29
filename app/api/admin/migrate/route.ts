@@ -12,7 +12,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Database migration completed successfully! Shipping columns added.",
+      message:
+        "Database migration completed successfully! Shipping columns added.",
     });
   } catch (error) {
     console.error("Migration error:", error);

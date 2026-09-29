@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
+import { revalidatePremadePages } from "@/lib/premade";
 import { createPremadeProduct, getPremadeProducts } from "@/lib/db";
 
 // Seed initial products (only if database is empty)
@@ -8,7 +9,6 @@ export async function POST() {
   if (denied) return denied;
 
   try {
-
     // Check if products already exist
     const existingProducts = await getPremadeProducts();
     if (existingProducts.length > 0) {
@@ -25,7 +25,8 @@ export async function POST() {
         price: 20,
         originalPrice: 30,
         image: "/fighterfront.jpeg",
-        description: "Pre-painted metal miniature. Perfect for tabletop gaming.",
+        description:
+          "Pre-painted metal miniature. Perfect for tabletop gaming.",
         sku: "1234567",
       },
       {
@@ -33,7 +34,8 @@ export async function POST() {
         price: 79.99,
         originalPrice: 120,
         image: "https://via.placeholder.com/300x300",
-        description: "Best seller with excellent reviews. Highly detailed dwarf warrior ready for battle.",
+        description:
+          "Best seller with excellent reviews. Highly detailed dwarf warrior ready for battle.",
         sku: "PREMADE-002",
       },
       {
@@ -41,7 +43,8 @@ export async function POST() {
         price: 130,
         originalPrice: 200,
         image: "https://via.placeholder.com/300x300",
-        description: "Limited edition exclusive item. Masterfully painted elven archer.",
+        description:
+          "Limited edition exclusive item. Masterfully painted elven archer.",
         sku: "PREMADE-003",
       },
     ];
@@ -49,6 +52,7 @@ export async function POST() {
     for (const product of initialProducts) {
       await createPremadeProduct(product);
     }
+    revalidatePremadePages();
 
     return NextResponse.json({
       success: true,

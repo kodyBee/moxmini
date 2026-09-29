@@ -1,65 +1,45 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
+import { useEffect } from "react";
+import Link from "next/link";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Error({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error('Figure Finder Error:', error);
+    console.error("Figure Finder Error:", error);
   }, [error]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(85deg, #000000 10%, #001220 40%)',
-        color: 'white',
-        padding: '40px 20px',
-      }}
-    >
-      <div
-        style={{
-          textAlign: 'center',
-          maxWidth: '600px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: '40px',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
-      >
-        <h2 className="text-3xl font-bold mb-4">Something went wrong!</h2>
-        <p className="text-gray-400 mb-6">
-          We encountered an error while loading the Figure Finder. This could be due to a network
-          issue or a problem with the data source.
+    <div className="container-page py-24">
+      <div className="surface mx-auto max-w-xl px-6 py-14 text-center">
+        <p className="eyebrow">Figure Finder</p>
+        <h1 className="mt-3 font-display text-4xl font-semibold">
+          The catalog didn&apos;t load
+        </h1>
+        <p className="mt-3 text-muted-foreground">
+          We couldn&apos;t reach the miniature catalog. This is usually a brief
+          network hiccup, so please try again in a moment.
         </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <button
-            onClick={reset}
-            className="cursor-pointer px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-          >
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button onClick={() => retry()}>
+            <RefreshCw aria-hidden />
             Try again
-          </button>
-          <Link
-            href="/"
-            className="cursor-pointer px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors inline-block"
-          >
-            Go home
-          </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/">Go home</Link>
+          </Button>
         </div>
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-6 p-4 bg-red-900/20 border border-red-500/50 rounded text-left">
-            <p className="text-red-400 text-sm font-mono">{error.message}</p>
-          </div>
+        {process.env.NODE_ENV === "development" && (
+          <p className="mt-8 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left font-mono text-xs text-[oklch(0.8_0.1_25)]">
+            {error.message}
+          </p>
         )}
       </div>
     </div>

@@ -1,5 +1,10 @@
 import "server-only";
-import { getPremadeProducts, isDatabaseConfigured, type PremadeProduct } from "@/lib/db";
+import { revalidatePath } from "next/cache";
+import {
+  getPremadeProducts,
+  isDatabaseConfigured,
+  type PremadeProduct,
+} from "@/lib/db";
 
 // Shown only in local development when no database is configured
 const DEMO_PRODUCTS: PremadeProduct[] = [
@@ -23,4 +28,22 @@ export async function listPremadeProducts(): Promise<PremadeProduct[]> {
     return DEMO_PRODUCTS;
   }
   return getPremadeProducts();
+}
+
+/** Like listPremadeProducts, but a database outage renders as "nothing for sale" */
+export async function listPremadeProductsForDisplay(): Promise<
+  PremadeProduct[]
+> {
+  try {
+    return await listPremadeProducts();
+  } catch (error) {
+    console.error("Error fetching premade products:", error);
+    return [];
+  }
+}
+
+/** Refresh the cached pages that show premade products */
+export function revalidatePremadePages() {
+  revalidatePath("/");
+  revalidatePath("/premade");
 }

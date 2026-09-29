@@ -18,7 +18,8 @@ export async function GET() {
       console.warn("POSTGRES_URL not configured, returning empty orders");
       return NextResponse.json({
         orders: [],
-        warning: "Database not configured. Please set POSTGRES_URL environment variable."
+        warning:
+          "Database not configured. Please set POSTGRES_URL environment variable.",
       });
     }
 
